@@ -3,7 +3,12 @@ IMAGE := trackpassDocker/api
 TAG   := dev
 PORT  := 8080
 
-.PHONY: help docker git
+# Branch atual (funciona melhor que --show-current em versões antigas do Git)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+
+.PHONY: help docker git \
+        build up restart down dev run \
+        v c at env t qual-branch
 
 ## comandos 
 help:
@@ -20,17 +25,17 @@ docker:
 	@echo   3. make restart       - Reinicia o container da API - para pequenas alterações
 	@echo   4. make down          - Para e remove o container quando não for mais usar
 	@echo ""
-	@echo == Atalhos e extras: =="
+	@echo == Atalhos e extras: ==
 	@echo   make dev              - Faz build + up de uma vez 
 	@echo   make run              - Roda a imagem direto, sem Compose - apenas para testes rápidos
 
 git:
 	@echo =========================  Comandos GIT  =========================== 
-	@echo   make v      			 - Ver o que mudou
-	@echo   make commit 			 - Adicionar e commitar mudanças 
-	@echo   make at 			 - Baixar ultimas mudancas do repositorio
-	@echo   make env   		 	 - Enviar commits para o repositorio
-	@echo   make t		 	 - Trocar para outra branch 
+	@echo   make v                 - Ver o que mudou 
+	@echo   make c M=\"msg\"       - Adicionar e commitar 
+	@echo   make at               - Baixar últimas mudanças da branch atual 
+	@echo   make env              - Enviar commits para a branch atual 
+	@echo   make t BR=nome        - Trocar para outra branch 
 
 #======== COMANDOS DOCKER ========
 build:
@@ -55,19 +60,21 @@ run:
 		$(IMAGE):$(TAG)
 
 #======== COMANDOS GIT ========
-
 v:
 	git status
 
 at:
-	git pull origin $$(git branch --show-current)
+	git pull origin $(BRANCH)
 
 env:
-	git push origin $(shell git branch --show-current)
+	git push origin $(BRANCH)
 
 t:
 	git checkout $(BR)
 
-commit:
+c:
 	git add .
 	git commit -m "$(M)"
+
+branch:
+	@echo Branch atual: $(BRANCH)
