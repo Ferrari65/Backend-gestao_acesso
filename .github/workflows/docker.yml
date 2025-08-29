@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write  # necessário para publicar no GHCR
+      packages: write  
 
     steps:
       - uses: actions/checkout@v4
