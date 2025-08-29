@@ -5,14 +5,14 @@ on:
     branches: [ dev, main ]
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  IMAGE_NAME: ${{ format('ghcr.io/{0}', toLower(github.repository)) }}
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write   # permite publicar no GHCR
+      packages: write  # necessário para publicar no GHCR
 
     steps:
       - uses: actions/checkout@v4
@@ -31,8 +31,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: dockerfile
+          file: dockerfile            # seu Dockerfile está na raiz
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-            ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ${{ env.IMAGE_NAME }}:${{ github.ref_name }}   # dev ou main
