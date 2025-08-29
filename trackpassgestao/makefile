@@ -57,11 +57,7 @@ run:
 git:
 	@echo "=========================  Comandos GIT  ==========================="
 	@echo ""
-	@echo "== Ordem recomendada de uso =="
-	@echo "  1. make s                - Ver o que mudou (status dos arquivos)"
-	@echo "  2. make pull             - Atualizar repositório local (git pull da branch atual)"
-	@echo "  3. make c M=\"msg\"        - Adicionar e commitar alterações com mensagem"
-	@echo "  4. make push             - Enviar commits para a branch atual (git push)"
+	@echo "  make pac              - Puxa as mudancas do repositorio, add e commita as suas alteracoes 
 	@echo ""
 	@echo "== Extras =="
 	@echo "  make ch-nome             - Trocar via atalho (ex.: make ch-dev)"
@@ -73,19 +69,11 @@ merge:
 	@echo "  make merge-main          - Atualiza main e faz merge main -> dev cria dev se não existir"
 
 # ======== COMANDOS GIT ========
-s:
-	git status
-
-pull:
+pac:
 	git pull origin $(BRANCH)
-
-push:
+	- git add .
+	- git commit -m "$(M)" || echo "Nenhuma mudanca para commitar"
 	git push origin $(BRANCH)
-
-c:
-	git add .
-	- git commit -m "$(M)" || echo "Nenhuma mudança para commitar"
-
 
 ch:
 	git checkout $(BR)
@@ -104,15 +92,15 @@ branch:
 	@echo "Branch atual: $(BRANCH)"
 
 merge-main:
-	@echo ">> Verificando se há alterações locais não commitadas..."
-	@git diff-index --quiet HEAD -- || echo " Há mudanças locais. Faça commit make c M=\"msg\" ou git stash antes." & exit 1
-	@echo ">> Atualizando 'main'..."
+	@echo Checking for uncommitted changes...
+	@git diff-index --quiet HEAD -- || (echo ERROR: Uncommitted changes. Commit (make c M="msg") or git stash first. & exit 1)
+	@echo Updating main...
 	@git checkout main
 	@git pull origin main
-	@echo ">> Indo para 'dev' criando se necessário..."
+	@echo Switching to dev (create if needed)...
 	@git checkout dev || git checkout -b dev
-	@echo ">> Fazendo merge: main -> dev..."
+	@echo Merging main into dev...
 	@git merge main
-	@echo ">> Enviando 'dev' para o remoto ..."
+	@echo Pushing dev...
 	@git push -u origin dev
-	@echo " Fluxo concluído: 'dev' agora contém tudo que está em 'main'."
+	@echo DONE: dev now contains everything from main.
