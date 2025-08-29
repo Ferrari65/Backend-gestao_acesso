@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="d61d324d-70f9-40ea-ab6c-b60fec232ddf" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -31,12 +25,7 @@
     &quot;url&quot;: &quot;https://github.com/Ferrari65/Backend-gestao_acesso.git&quot;,
     &quot;accountId&quot;: &quot;7ea7b50b-c9ef-4510-838d-f5f881a7db06&quot;
   }
-}</component>
-  <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 2
-}</component>
-  <component name="ProjectId" id="31uzYYYZVT3Nuy0rtU9oNW61F75" />
+
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -45,8 +34,6 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "dev"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -57,11 +44,11 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="d61d324d-70f9-40ea-ab6c-b60fec232ddf" name="Changes" comment="" />
-      <created>1756388793822</created>
+      <changelist id="51b75d24-5c99-4904-a884-2b52d302699e" name="Changes" comment="" />
+      <created>1756388595749</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1756388793822</updated>
+      <updated>1756388595749</updated>
     </task>
     <servers />
   </component>

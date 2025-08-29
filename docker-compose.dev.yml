@@ -1,0 +1,7 @@
+version: "3.9"
+#teste
+services:
+  api:
+    image: ghcr.io/ferrari65/backend-gestao_acesso:main
+    ports:
+      - "8080:8080"
