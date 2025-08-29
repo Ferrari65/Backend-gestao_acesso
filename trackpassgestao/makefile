@@ -65,21 +65,22 @@ logs-up:
 	docker compose -f docker-compose.dev.yml up -d
 	docker compose -f docker-compose.dev.yml logs -f api
 
-## ==================== COMANDOS GIT ====================
+## ==================== MENU COMANDOS GIT ====================
 git-p:
 	@echo "========================= Comandos GIT ========================="
 	@echo "== Combos fluxos prontos =="
-	@echo "  make pac M=\"msg\"   - Pull + Add + Commit + Push (salvar e subir tudo)"
-	@echo "  make check          - Status e últimos commits (resumo rápido)"
+	@echo "  make pac M=\"msg\"   - Pull + Add + Commit + Push alvar e subir tudo"
+	@echo "  make check          - Status e últimos commits resumo rápido"
 	@echo "  make merge-main     - Traz as alterações da 'main' para sua branch atual"
-	@echo "  make merge-dev      - Leva as alterações da 'dev' para a 'main' (precisa estar na 'main')"
+	@echo "  make merge-dev      - Leva as alterações da 'dev' para a 'main' precisa estar na 'main'"
 
 git-a:
 	@echo "== Individuais -- avançados =="
-	@echo "  make ch-nome           - Atalho (ex.: make ch-dev)"
-	@echo "  make nb-nome           - Atalho (ex.: make nb-feature/login)"
+	@echo "  make ch-nome           - Atalho ex.: make ch-dev"
+	@echo "  make nb-nome           - Atalho ex.: make nb-feature/login"
 	@echo "  make branch            - Mostrar a branch atual"
 
+# ======== GIT: combos ========
 pac:
 	$(if $(strip $(M)),,$(error Use: make pac M="sua mensagem de commit"))
 	git pull origin $(BRANCH)
