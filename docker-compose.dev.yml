@@ -2,9 +2,6 @@ version: "3.9"
 #teste
 services:
   api:
-    build:
-      context: .  
-      image: ghcr.io/ferrari65/backend-gestao_acesso:dev
-    env_file: .env
+    image: ghcr.io/ferrari65/backend-gestao_acesso:main
     ports:
-      -"${SERVER_PORT:-8080}:8080"
+      - "8080:8080"
