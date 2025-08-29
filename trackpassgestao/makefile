@@ -71,8 +71,6 @@ git-p:
 
 git-a:
 	@echo "== Individuais -- avançados =="
-	@echo "  make ch BR=nome        - Trocar para branch existente"
-	@echo "  make nb BR=nome        - Criar e trocar para nova branch"
 	@echo "  make ch-nome           - Atalho (ex.: make ch-dev)"
 	@echo "  make nb-nome           - Atalho (ex.: make nb-feature/login)"
 	@echo "  make branch            - Mostrar a branch atual"
@@ -87,14 +85,6 @@ pac:
 check:
 	git status
 	git log --oneline -n 5
-
-ch:
-	$(if $(strip $(BR)),,$(error Use: make ch BR=nome-da-branch))
-	git checkout $(BR)
-
-nb:
-	$(if $(strip $(BR)),,$(error Use: make nb BR=nome-da-nova-branch))
-	git checkout -b $(BR)
 
 ch-%:
 	git checkout $*
@@ -117,7 +107,6 @@ merge-main:
 	git merge main
 	@echo "Pronto! 'main' foi mergeada em '$(BRANCH)'."
 
-# ======== Limpeza ========
 clean:
 	@echo "Limpando containers e imagens não utilizados..."
 	docker system prune --volumes --force
