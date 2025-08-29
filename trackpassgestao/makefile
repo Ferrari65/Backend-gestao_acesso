@@ -32,15 +32,15 @@ git:
 	@echo =========================  Comandos GIT  ===========================
 	@echo ""
 	@echo == Ordem recomendada de uso =="
-	@echo   1. make v                - Ver o que mudou 
-	@echo   2. make at               - Atualizar o repositório local 
+	@echo   1. make s                - Ver o que mudou 
+	@echo   2. make pull               - Atualizar o repositório local 
 	@echo   3. make c M=\"msg\"        - Adicionar e commitar alterações com mensagem
 	@echo   4. make push             - Enviar commits para a branch atual 
 	@echo   5. make historico        - Ver últimos commits resumidos
 	@echo ""
 	@echo"== Extras ==
-	@echo   make t BR=nome           - Trocar para outra branch existente
-	@echo   make nova BR=nome        - Criar e trocar para uma nova branch
+	@echo   make ch            - Trocar para outra branch existente
+	@echo   make nb        - Criar e trocar para uma nova branch
 #======== COMANDOS DOCKER ========
 build:
 	docker build \
@@ -64,21 +64,27 @@ run:
 		$(IMAGE):$(TAG)
 
 #======== COMANDOS GIT ========
-v:
+s:
 	git status
 
-at:
+pull:
 	git pull origin $(BRANCH)
 
-env:
+push:
 	git push origin $(BRANCH)
-
-t:
-	git checkout $(BR)
 
 c:
 	git add .
-	git commit -m "$(M)"
+	- git commit -m "$(M)" || echo "Nenhuma mudança para commitar"
+
+historico:
+	git log --oneline -n 10
+
+ch:
+	git checkout $(BR)
+
+nb:
+	git checkout -b $(BR)
 
 branch:
-	@echo Branch atual: $(BRANCH)
+	@echo "Branch atual: $(BRANCH)"
