@@ -7,13 +7,15 @@ BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
 .PHONY: help docker git \
         build up restart down dev run \
-        s pull c push historico ch nb ch-% nb-% branch
+        s pull c push historico ch nb ch-% nb-% branch \
+        merge-main
 
 ## ==================== MENU  ====================
 help:
 	@echo "== Escolha um grupo de comandos =="
-	@echo "  make docker   - Ver comandos de Docker"
-	@echo "  make git      - Ver comandos de Git"
+	@echo "  make docker       - Ver comandos de Docker"
+	@echo "  make git          - Ver comandos de Git"
+	@echo "  make merge        - exibe fluxo de merge main -> dev"
 
 ## ==================== COMANDOS DOCKER ====================
 docker:
@@ -60,14 +62,15 @@ git:
 	@echo "  2. make pull             - Atualizar repositório local (git pull da branch atual)"
 	@echo "  3. make c M=\"msg\"        - Adicionar e commitar alterações com mensagem"
 	@echo "  4. make push             - Enviar commits para a branch atual (git push)"
-	@echo "  5. make historico        - Ver últimos commits resumidos"
 	@echo ""
 	@echo "== Extras =="
-	@echo "  make ch BR=nome          - Trocar para outra branch existente"
-	@echo "  make nb BR=nome          - Criar e trocar para uma nova branch"
-	@echo "  make ch-nome             - Trocar para branch pelo atalho (ex.: make ch-dev)"
-	@echo "  make nb-nome             - Criar e trocar para nova branch (ex.: make nb-feature/login)"
+	@echo "  make ch-nome             - Trocar via atalho (ex.: make ch-dev)"
+	@echo "  make nb-nome             - Criar via atalho (ex.: make nb-feature/login)"
 	@echo "  make branch              - Mostrar a branch atual"
+
+merge:
+	@echo "===== trazer main -> dev ===="
+	@echo "  make merge-main          - Atualiza main e faz merge main -> dev cria dev se não existir"
 
 # ======== COMANDOS GIT ========
 s:
@@ -83,14 +86,13 @@ c:
 	git add .
 	- git commit -m "$(M)" || echo "Nenhuma mudança para commitar"
 
-historico:
-	git log --oneline -n 10
 
 ch:
 	git checkout $(BR)
 
 nb:
 	git checkout -b $(BR)
+
 
 ch-%:
 	git checkout $*
@@ -100,3 +102,17 @@ nb-%:
 
 branch:
 	@echo "Branch atual: $(BRANCH)"
+
+merge-main:
+	@echo ">> Verificando se há alterações locais não commitadas..."
+	@git diff-index --quiet HEAD -- || echo " Há mudanças locais. Faça commit make c M=\"msg\" ou git stash antes." & exit 1
+	@echo ">> Atualizando 'main'..."
+	@git checkout main
+	@git pull origin main
+	@echo ">> Indo para 'dev' criando se necessário..."
+	@git checkout dev || git checkout -b dev
+	@echo ">> Fazendo merge: main -> dev..."
+	@git merge main
+	@echo ">> Enviando 'dev' para o remoto ..."
+	@git push -u origin dev
+	@echo " Fluxo concluído: 'dev' agora contém tudo que está em 'main'."
