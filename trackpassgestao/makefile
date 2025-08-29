@@ -52,6 +52,10 @@ down:
 run:
 	docker run --rm -p $(PORT):8080 -e SPRING_PROFILES_ACTIVE=$(TAG) $(IMAGE):$(TAG)
 
+clean:
+	@echo "Limpando containers e imagens não utilizados..."
+	docker system prune --volumes --force
+	@echo "Limpeza concluída."
 # ======== DOCKER combos ========
 dev: build up
 
@@ -68,6 +72,7 @@ git-p:
 	@echo "  make pac M=\"msg\"   - Pull + Add + Commit + Push (salvar e subir tudo)"
 	@echo "  make check          - Status e últimos commits (resumo rápido)"
 	@echo "  make merge-main     - Traz as alterações da 'main' para sua branch atual"
+	@echo "  make merge-dev      - Leva as alterações da 'dev' para a 'main' (precisa estar na 'main')"
 
 git-a:
 	@echo "== Individuais -- avançados =="
@@ -95,6 +100,7 @@ nb-%:
 branch:
 	@echo "Branch atual: $(BRANCH)"
 
+# COMANDOS GIT PARA MERGE 
 merge-main:
 	@echo "===== Trazendo main para a sua branch atual ====="
 	@echo "Verificando alterações não commitadas..."
@@ -107,7 +113,16 @@ merge-main:
 	git merge main
 	@echo "Pronto! 'main' foi mergeada em '$(BRANCH)'."
 
-clean:
-	@echo "Limpando containers e imagens não utilizados..."
-	docker system prune --volumes --force
-	@echo "Limpeza concluída."
+merge-dev:
+	@echo "===== Levando alterações da 'dev' para 'main' ====="
+	@echo "Verificando alterações não commitadas..."
+	@git diff-index --quiet HEAD -- || (echo ERRO: Você tem alterações não commitadas. Use 'make pac M=\"msg\"' ou 'git stash' antes de continuar. && exit 1)
+	@echo "Trocando para 'main' e atualizando..."
+	git checkout main
+	git pull origin main
+	@echo "Fazendo merge da 'dev' em 'main'..."
+	git merge dev
+	@echo "Enviando 'main' para o remoto..."
+	git push origin main
+	@echo "Pronto! 'dev' foi mergeada em 'main'."
+
