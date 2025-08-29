@@ -31,7 +31,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: dockerfile            # seu Dockerfile está na raiz
+          file: dockerfile            
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
