@@ -3,14 +3,13 @@ IMAGE := trackpassDocker/api
 TAG   := dev
 PORT  := 8080
 
-# Branch atual (funciona melhor que --show-current em versões antigas do Git)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
 .PHONY: help docker git \
         build up restart down dev run \
         v c at env t qual-branch
 
-## comandos 
+## COMANDOS 
 help:
 	@echo "== Escolha um grupo de comandos =="
 	@echo "  make docker   - Ver comandos de Docker"
@@ -30,13 +29,18 @@ docker:
 	@echo   make run              - Roda a imagem direto, sem Compose - apenas para testes rápidos
 
 git:
-	@echo =========================  Comandos GIT  =========================== 
-	@echo   make v                 - Ver o que mudou 
-	@echo   make c M=\"msg\"       - Adicionar e commitar 
-	@echo   make at               - Baixar últimas mudanças da branch atual 
-	@echo   make env              - Enviar commits para a branch atual 
-	@echo   make t BR=nome        - Trocar para outra branch 
-
+	@echo =========================  Comandos GIT  ===========================
+	@echo ""
+	@echo == Ordem recomendada de uso =="
+	@echo   1. make v                - Ver o que mudou 
+	@echo   2. make at               - Atualizar o repositório local 
+	@echo   3. make c M=\"msg\"        - Adicionar e commitar alterações com mensagem
+	@echo   4. make push             - Enviar commits para a branch atual 
+	@echo   5. make historico        - Ver últimos commits resumidos
+	@echo ""
+	@echo"== Extras ==
+	@echo   make t BR=nome           - Trocar para outra branch existente
+	@echo   make nova BR=nome        - Criar e trocar para uma nova branch
 #======== COMANDOS DOCKER ========
 build:
 	docker build \
