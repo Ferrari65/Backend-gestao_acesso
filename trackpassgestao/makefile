@@ -57,12 +57,10 @@ run:
 git:
 	@echo "=========================  Comandos GIT  ==========================="
 	@echo ""
-	@echo "  make pac              - Puxa as mudancas do repositorio, add e commita as suas alteracoes 
-	@echo ""
-	@echo "== Extras =="
-	@echo "  make ch-nome             - Trocar via atalho (ex.: make ch-dev)"
-	@echo "  make nb-nome             - Criar via atalho (ex.: make nb-feature/login)"
-	@echo "  make branch              - Mostrar a branch atual"
+	@echo   make pac                 - Puxa as mudancas do repositorio,add e commita 
+	@echo   make ch-nome             - Trocar via atalho 
+	@echo   make nb-nome             - Criar via atalho 
+	@echo   make branch              - Mostrar a branch atual
 
 merge:
 	@echo "===== trazer main -> dev ===="
@@ -72,7 +70,7 @@ merge:
 pac:
 	git pull origin $(BRANCH)
 	- git add .
-	- git commit -m "$(M)" || echo "Nenhuma mudanca para commitar"
+	- git commit -m "$(M)"
 	git push origin $(BRANCH)
 
 ch:
