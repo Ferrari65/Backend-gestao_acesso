@@ -117,10 +117,10 @@ nb-%:
 branch:
 	@echo "Branch atual: $(BRANCH)"
 
-# ======== OPÇÃO A: Trazer main -> dev (merge) ========
 merge-main:
 	@echo Checking for uncommitted changes...
-	@git diff-index --quiet HEAD -- || (echo ERROR: Uncommitted changes. Commit (make pac M="msg") or git stash first. & exit 1)
+	@git diff-index --quiet HEAD --
+	@if errorlevel 1 ( echo ERROR: Uncommitted changes. Commit ^(make pac M="msg"^) or git stash first. & exit 1 )
 	@echo Updating main...
 	@git checkout main
 	@git pull origin main
