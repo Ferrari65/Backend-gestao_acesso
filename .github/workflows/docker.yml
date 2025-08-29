@@ -29,13 +29,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Construir e publicar imagem Docker
-  uses: docker/build-push-action@v6
-  with:
-    context: .
-    file: dockerfile
-    push: true
-    tags: |
-      ghcr.io/ferrari65/backend-gestao_acesso:sha-${{ github.sha }}
-      ghcr.io/ferrari65/backend-gestao_acesso:${{ github.ref_name }}
-
+      - name: Construindo e publicando a imagem
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfile
+          push: true
+          tags: |
+           ghcr.io/ferrari65/backend-gestao_acesso:sha-${{ github.sha }}
+           ghcr.io/ferrari65/backend-gestao_acesso:${{ github.ref_name }}
