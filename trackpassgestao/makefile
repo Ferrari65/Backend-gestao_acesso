@@ -77,9 +77,6 @@ git-a:
 	@echo "  make nb-nome           - Atalho (ex.: make nb-feature/login)"
 	@echo "  make branch            - Mostrar a branch atual"
 
-merge:
-	@echo "===== Fluxo para trazer main -> dev ====="
-
 pac:
 	$(if $(strip $(M)),,$(error Use: make pac M="sua mensagem de commit"))
 	git pull origin $(BRANCH)
