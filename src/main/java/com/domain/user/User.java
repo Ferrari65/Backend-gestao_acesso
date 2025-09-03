@@ -10,8 +10,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+
+@Entity
 @Table(name= "colaboradores")
-@Entity(name= "colaboradores")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,7 +23,7 @@ public class User implements UserDetails {
     @Column(name= "id_colaborador")
     private UUID idColaborador;
 
-    @Column
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column
