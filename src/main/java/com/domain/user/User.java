@@ -1,5 +1,7 @@
 package com.domain.user;
 
+import com.domain.user.Role.Role;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,36 +12,40 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-
 @Entity
-@Table(name= "colaboradores")
+@Table(name = "colaboradores")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of ="idColaborador")
+@EqualsAndHashCode(of = "idColaborador")
+@ToString(exclude = "senha")
 public class User implements UserDetails {
 
     @Id
-    @Column(name= "id_colaborador")
+    @Column(name = "id_colaborador")
     private UUID idColaborador;
 
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Column(nullable = false)
     private String senha;
 
     @ManyToOne
-    @JoinColumn(name = "id_role")
+    @JoinColumn(name = "id_role", nullable = false)
     private Role role;
 
-    @Column(name = "ativo")
+    @Column(name = "ativo", nullable = false)
     private Boolean ativo = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String authority = "ROLE_" + role.getNome().toUpperCase();
-        return List.of(new SimpleGrantedAuthority(authority));
+        String roleName = (role != null && role.getRoleName() != null)
+                ? role.getRoleName().name()
+                : "COLABORADOR";
+
+        return List.of(new SimpleGrantedAuthority("ROLE_" + roleName));
     }
 
     @Override
@@ -52,23 +58,12 @@ public class User implements UserDetails {
         return email;
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return Boolean.TRUE.equals(ativo);
     }
 }

@@ -1,4 +1,3 @@
-// com.services.AuthorizationService
 package com.services;
 
 import com.repositories.UserRepository;
@@ -17,8 +16,7 @@ public class AuthorizationService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String email = (username == null) ? "" : username.trim();
-        return repository.findByEmailIgnoreCase(email)
+        return repository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário inexistente ou senha inválida"));
-        // Sua entidade User implementa UserDetails, então pode retornar a própria User.
     }
 }
