@@ -1,6 +1,6 @@
 package com.services;
 
-import com.domain.user.User;
+import com.domain.user.colaborador.User;
 import com.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

@@ -1,6 +1,7 @@
-package com.infra;
+package com.infra.security;
 
-import com.domain.user.User;
+import com.domain.user.colaborador.User;
+import com.infra.TokenService;
 import com.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,14 @@ public class SecurityFilter extends OncePerRequestFilter {
     TokenService tokenService;
     @Autowired
     UserRepository userRepository;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String p = request.getServletPath();
+        return p.startsWith("/v3/api-docs")
+                || p.startsWith("/swagger-ui")
+                || p.equals("/swagger-ui.html");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)

@@ -1,7 +1,7 @@
 // com.controller.AuthenticationController
 package com.controller;
 
-import com.domain.user.User;                 // <- cuidado para não importar o User do Spring
+import com.domain.user.colaborador.User;                 // <- cuidado para não importar o User do Spring
 import com.dto.LoginDTO.LoginRequestDTO;              // record LoginRequestDTO(String email, String senha)
 import com.dto.LoginDTO.LoginResponseDTO;             // record LoginResponseDTO(String token, String email, String role, String homePath)
 import com.infra.TokenService;
