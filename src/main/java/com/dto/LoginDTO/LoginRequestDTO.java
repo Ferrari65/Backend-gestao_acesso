@@ -1,3 +1,3 @@
 package com.dto.LoginDTO;
 
-public record LoginRequestDTO(String email, String senha) {}
+public record LoginRequestDTO(String username, String senha) {}

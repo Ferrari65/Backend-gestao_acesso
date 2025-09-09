@@ -21,7 +21,7 @@ public class TokenService {
     @Value("${security.jwt.issuer:auth.api}")
     private String issuer;
 
-    public String GenerateToken(User user) {
+    public String GenerateToken(User user, String authMode) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
 
@@ -33,7 +33,15 @@ public class TokenService {
                     .withIssuer(issuer)
                     .withSubject(user.getEmail())
                     .withExpiresAt(genExpirationDate())
-                    .withClaim("uid", user.getIdColaborador().toString());
+                    .withClaim("uid", user.getIdColaborador().toString())
+                    .withClaim("auth_mode", authMode);
+
+            if(user.getEmail() !=null){
+                builder.withClaim("email",user.getEmail());
+            }
+            if (user.getMatricula() != null){
+                builder.withClaim("matricula",user.getMatricula());
+            }
 
             if (roleName != null) {
                 builder.withArrayClaim("roles", new String[]{ roleName });

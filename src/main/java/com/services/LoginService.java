@@ -13,11 +13,17 @@ public class LoginService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User loginAuto(String email, String senha) {
-        String normalized = (email == null) ? "" : email.trim().toLowerCase();
+    public User loginAuto(String username, String senha) {
+        String normalized = (username == null) ? "" : username.trim().toLowerCase();
 
-        var user = userRepository.findByEmail(normalized)
-                .orElseThrow(() -> new RuntimeException("CREDENCIAL INVALIDA"));
+        User user;
+        if(normalized.contains("@")){
+            user = userRepository.findByEmail(normalized.toLowerCase())
+                    .orElseThrow(() -> new RuntimeException("EMAIL INVALIDO"));
+        }else{
+            user = userRepository.findByMatricula(normalized)
+                    .orElseThrow(() -> new RuntimeException("MATRICULA INVALIDA"));
+        }
 
         if (Boolean.FALSE.equals(user.getAtivo())) {
             throw new RuntimeException("USUARIO INATIVO");

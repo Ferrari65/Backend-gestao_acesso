@@ -14,6 +14,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("select u from User u where lower(u.email) = lower(:email)")
     Optional<User> findByEmail(@Param("email") String email);
+    Optional<User> findByMatricula(String matricula);
 
     @EntityGraph(attributePaths = {"cidade", "role"})
     @Query("select u from User u")

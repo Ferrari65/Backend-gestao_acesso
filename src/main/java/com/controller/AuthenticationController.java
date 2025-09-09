@@ -1,13 +1,11 @@
-// com.controller.AuthenticationController
 package com.controller;
 
-import com.domain.user.colaborador.User;                 // <- cuidado para não importar o User do Spring
-import com.dto.LoginDTO.LoginRequestDTO;              // record LoginRequestDTO(String email, String senha)
-import com.dto.LoginDTO.LoginResponseDTO;             // record LoginResponseDTO(String token, String email, String role, String homePath)
+import com.domain.user.colaborador.User;
+import com.dto.LoginDTO.LoginRequestDTO;
+import com.dto.LoginDTO.LoginResponseDTO;
 import com.infra.TokenService;
 import com.services.LoginService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.tags.Tags;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +20,14 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     @Tag(name="Login", description = "Endpoint de Login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO body) {
-        User user = loginService.loginAuto(body.email(), body.senha());
 
-        String token = tokenService.GenerateToken(user);
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO body) {
+        User user = loginService.loginAuto(body.username(), body.senha());
+
+        String authMode = body.username().contains("@") ? "email" : "matricula";
+        String token = tokenService.GenerateToken(user, authMode);
+
+
         String role = (user.getRole() != null && user.getRole().getNome() != null)
                 ? user.getRole().getNome().trim().toUpperCase()
                 : "COLABORADOR";
