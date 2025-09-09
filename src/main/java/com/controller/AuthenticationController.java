@@ -6,6 +6,8 @@ import com.dto.LoginDTO.LoginRequestDTO;              // record LoginRequestDTO(
 import com.dto.LoginDTO.LoginResponseDTO;             // record LoginResponseDTO(String token, String email, String role, String homePath)
 import com.infra.TokenService;
 import com.services.LoginService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ public class AuthenticationController {
     private final LoginService loginService;
 
     @PostMapping("/login")
+    @Tag(name="Login", description = "Endpoint de Login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO body) {
         User user = loginService.loginAuto(body.email(), body.senha());
 

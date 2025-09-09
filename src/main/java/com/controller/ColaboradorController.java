@@ -20,7 +20,7 @@ import java.util.List;
 @RequestMapping("/listarcolaboradores")
 @RequiredArgsConstructor
 
-@Tag(name="Colaborador", description = "Endpoints de Colaborador")
+@Tag(name="Colaboradores", description = "Endpoints de Colaborador")
 public class ColaboradorController {
     private final UserRepository userRepository;
 
