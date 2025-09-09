@@ -1,19 +1,21 @@
 package com.controller.localizacao;
 
+import com.domain.user.endereco.Pontos;
 import com.dto.localizacao.PontoDTO;
 import com.dto.localizacao.PontosRequestDTO;
+import com.repositories.localizacao.PontosRepository;
 import com.services.localizacao.PontoService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
+
 @PreAuthorize("hasRole('GESTOR')")
 @RequestMapping("/pontos")
 public class PontoController {
@@ -25,5 +27,10 @@ public class PontoController {
         var salvo = service.criar(dto);
         return  ResponseEntity.ok(PontoDTO.from(salvo));
     }
+    //@GetMapping(path = {"/listarPontos"})
+    //@Override
+    //public ResponseEntity<List<Pontos>>listarTodas(){
+    //    var lista = PontosRepository.findAll()
+    //}
 
 }
