@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/listarcolaboradores")
+@RequestMapping("/colaboradores")
 @RequiredArgsConstructor
 
-@Tag(name="Colaboradores", description = "Endpoints de Colaborador")
+@Tag(name="Colaboradores", description = "Endpoints para manipulação completa de recursos de Colaborador (CRUD).")
 public class ColaboradorController {
     private final UserRepository userRepository;
 

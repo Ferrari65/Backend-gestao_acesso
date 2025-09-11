@@ -1,36 +1,79 @@
 package com.controller.localizacao;
 
 import com.domain.user.endereco.Pontos;
-import com.dto.localizacao.PontoDTO;
-import com.dto.localizacao.PontosRequestDTO;
-import com.repositories.localizacao.PontosRepository;
+import com.dto.localizacao.Ponto.PontoDTO;
+import com.dto.localizacao.Ponto.PontosRequestDTO;
 import com.services.localizacao.PontoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-
 @PreAuthorize("hasRole('GESTOR')")
 @RequestMapping("/pontos")
-public class PontoController {
+@Tag(name = "Pontos", description = "Endpoints para manipulação completa de recursos de Pontos (CRUD).")
+public class PontoController implements com.controller.localizacao.docs.PontoControllerDocs {
+
     private final PontoService service;
 
-    @PostMapping("/cadastrarPontos")
-    @Tag(name="Pontos", description = "Endpoints destinado ao CRUD de Pontos")
-    public ResponseEntity<PontoDTO> criar(@RequestBody PontosRequestDTO dto){
-        var salvo = service.criar(dto);
-        return  ResponseEntity.ok(PontoDTO.from(salvo));
+    @GetMapping
+    @PreAuthorize("hasAnyRole('GESTOR','LIDER')")
+    @Override
+    public ResponseEntity<List<PontoDTO>> listar() {
+        var lista = service.listar().stream().map(PontoDTO::from).toList();
+        return lista.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(lista);
     }
-    //@GetMapping(path = {"/listarPontos"})
-    //@Override
-    //public ResponseEntity<List<Pontos>>listarTodas(){
-    //    var lista = PontosRepository.findAll()
-    //}
 
+
+    @GetMapping(value = "/{id}", produces = "application/json")
+    @PreAuthorize("hasAnyRole('GESTOR','LIDER')")
+    @Override
+    public ResponseEntity<PontoDTO> buscar(@PathVariable Integer id) {
+        Pontos p = service.buscar(id);
+        return ResponseEntity.ok(PontoDTO.from(p));
+    }
+
+
+    @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
+    @PreAuthorize("hasRole('GESTOR')")
+    @Override
+    public ResponseEntity<PontoDTO> atualizar(@PathVariable Integer id,
+                                              @Valid @RequestBody PontosRequestDTO dto) {
+        Pontos atualizado = service.atualizar(id, dto);
+        return ResponseEntity.ok(PontoDTO.from(atualizado));
+    }
+
+    @PostMapping
+    @Override
+    public ResponseEntity<PontoDTO> criar(@Valid @RequestBody PontosRequestDTO dto) {
+        Pontos salvo = service.criar(dto);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(salvo.getIdPonto())
+                .toUri();
+        return ResponseEntity.created(location).body(PontoDTO.from(salvo));
+    }
+
+    @DeleteMapping(value = "/{id}")
+    @PreAuthorize("hasRole('GESTOR')")
+    @Override
+    public ResponseEntity<Void> excluir(@PathVariable Integer id) {
+        service.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
 }

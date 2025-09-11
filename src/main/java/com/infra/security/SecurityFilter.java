@@ -25,14 +25,6 @@ public class SecurityFilter extends OncePerRequestFilter {
     UserRepository userRepository;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String p = request.getServletPath();
-        return p.startsWith("/v3/api-docs")
-                || p.startsWith("/swagger-ui")
-                || p.equals("/swagger-ui.html");
-    }
-
-    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 

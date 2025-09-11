@@ -14,7 +14,7 @@ public class Pontos {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "is_ponto")
+    @Column(name = "id_ponto")
     private Integer idPonto;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

@@ -1,4 +1,4 @@
-package com.dto.localizacao;
+package com.dto.localizacao.Ponto;
 
 import com.domain.user.endereco.Pontos;
 

@@ -1,5 +1,6 @@
 package com.domain.user.Role;
 
+import com.domain.user.Enum.RoleName;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -15,8 +15,20 @@ public class AuthorizationService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String email = (username == null) ? "" : username.trim();
-        return repository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário inexistente ou senha inválida"));
+        String raw = (username == null) ? "" : username.trim();
+        boolean isEmail = raw.contains("@");
+
+        var userOpt = isEmail
+                ? repository.findByEmail(raw.toLowerCase())
+                : repository.findByMatricula(raw);
+
+        var user = userOpt.orElseThrow(() ->
+                new UsernameNotFoundException("Credenciais inválidas"));
+
+        if (Boolean.FALSE.equals(user.getAtivo())) {
+            throw new org.springframework.security.authentication.DisabledException("Usuário inativo");
+        }
+
+        return user;
     }
 }

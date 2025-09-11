@@ -1,4 +1,4 @@
-package com.domain.user.Role;
+package com.domain.user.Enum;
 
 public enum RoleName {
     GESTOR,LIDER, COLABORADOR;

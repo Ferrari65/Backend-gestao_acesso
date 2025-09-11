@@ -36,8 +36,8 @@ public interface CidadesControllerDocs {
     )
     ResponseEntity<List<Cidade>> listarTodas();
 
-    @Operation(summary = "Cadastrar Cidades",
-            description = "Permite o cadastro de uma nova cidade, validando se o nome e a UF (Unidade Federativa) já existem.",
+    @Operation(summary = "Criar uma nova Cidade",
+            description = "Cria um novo registro de cidade no sistema. O corpo da requisição deve conter o nome e a UF da cidade. Se o nome e a UF já existirem, a operação falhará. Em caso de sucesso, retorna o objeto da cidade criada e o status 201 (Created).",
             responses = {
                     @ApiResponse(
                             description = "Success",
@@ -57,8 +57,8 @@ public interface CidadesControllerDocs {
     ResponseEntity<Cidade> criarCidade(@Valid @RequestBody CidadeRequestDTO dto,
                                        UriComponentsBuilder uriBuilder);
 
-    @Operation(summary = "Atualizar Cidade",
-            description = "Permite atualizar os dados (nome e UF) de uma cidade específica, identificada pelo seu ID.",
+    @Operation(summary = "Atualizar uma Cidade por ID",
+            description = "Atualiza os dados de uma cidade existente, identificada pelo ID fornecido no caminho da URL. O corpo da requisição deve conter o objeto CidadeRequestDTO com as novas informações. Retorna o objeto da cidade atualizada e o status 200 (OK).",
             responses = {
                     @ApiResponse(
                             description = "Success",
@@ -78,8 +78,8 @@ public interface CidadesControllerDocs {
     ResponseEntity<?> atualizarCidade(@PathVariable Integer id,
                                       @Valid @RequestBody CidadeRequestDTO dto);
 
-    @Operation(summary = "Deletar Cidade",
-            description = "Permite a remoção de uma cidade específica do sistema, identificada por seu ID único.",
+    @Operation(summary = "Excluir uma Cidade por ID",
+            description = "Exclui permanentemente uma cidade do sistema, identificada pelo seu ID. Esta operação é irreversível. Em caso de sucesso, retorna o status 204 (No Content).",
             responses = {
                     @ApiResponse(
                             description = "Success",

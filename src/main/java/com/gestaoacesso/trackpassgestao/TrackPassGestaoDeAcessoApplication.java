@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(scanBasePackages = "com")
 @EnableJpaRepositories(basePackages = "com.repositories")
 @EntityScan(basePackages = "com.domain")
+
+
 public class TrackPassGestaoDeAcessoApplication {
 
 	public static void main(String[] args) {

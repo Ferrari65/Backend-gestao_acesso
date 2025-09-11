@@ -21,7 +21,7 @@ public class TokenService {
     @Value("${security.jwt.issuer:auth.api}")
     private String issuer;
 
-    public String GenerateToken(User user, String authMode) {
+    public String generateToken(User user, String authMode) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
 

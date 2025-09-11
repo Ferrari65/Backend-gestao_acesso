@@ -16,24 +16,21 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfigurations {
 
-    @Autowired
-    SecurityFilter securityFilter;
-
     private static final String[] SWAGGER_WHITELIST = {
-            "/v3/api-docs/**",
-            "/swagger-ui.html",
-            "/swagger-ui/**"
+            "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"
     };
+
+    @Autowired SecurityFilter securityFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {}) // se usa front web
+                .cors(cors -> {}) // usa o CorsConfigurationSource
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
@@ -51,7 +48,5 @@ public class SecurityConfigurations {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 }

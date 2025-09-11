@@ -3,6 +3,7 @@ package com.controller.localizacao;
 import com.domain.user.endereco.Cidade;
 import com.dto.localizacao.CidadeRequestDTO;
 import com.repositories.localizacao.CidadeRepository;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,19 +18,20 @@ import java.util.List;
 @PreAuthorize("hasRole('GESTOR')")
 @RequestMapping("/cidades")
 @RequiredArgsConstructor
-@Tag(name = "Cidades", description = "Endpoints de Cidade")
+@Tag(name = "Cidades", description = "Endpoints para manipulação completa de recursos de Cidade (CRUD)")
+@SecurityRequirement(name = "bearerAuth")
 public class CidadesController implements com.controller.localizacao.docs.CidadesControllerDocs {
 
     private final CidadeRepository cidadeRepository;
 
-    @GetMapping(path = {"/listarCidades"})
+    @GetMapping(produces = "application/json")
     @Override
     public ResponseEntity<List<Cidade>> listarTodas() {
         var lista = cidadeRepository.findAll();
         return lista.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(lista);
     }
 
-    @PostMapping("/cadastrarCidade")
+    @PostMapping(consumes = "application/json", produces = "application/json")
     @Override
     public ResponseEntity<Cidade> criarCidade(@Valid @RequestBody CidadeRequestDTO dto,
                                               UriComponentsBuilder uriBuilder) {
@@ -45,11 +47,11 @@ public class CidadesController implements com.controller.localizacao.docs.Cidade
         c.setUf(uf);
         c = cidadeRepository.save(c);
 
-        var uri = uriBuilder.path("/cidades/{id}").buildAndExpand(c.getIdCidade()).toUri();
+        var uri = uriBuilder.path("/{id}").buildAndExpand(c.getIdCidade()).toUri();
         return ResponseEntity.created(uri).body(c);
     }
 
-    @PutMapping("/atualizarCidade/{id}")
+    @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     @Override
     public ResponseEntity<?> atualizarCidade(@PathVariable Integer id,
                                              @Valid @RequestBody CidadeRequestDTO dto){
@@ -70,7 +72,7 @@ public class CidadesController implements com.controller.localizacao.docs.Cidade
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/deletarCidade/{id}")
+    @DeleteMapping(value = "/{id}", produces = "application/json")
     @Override
     public ResponseEntity<Void> deletarcidade(@PathVariable Integer id){
         if (!cidadeRepository.existsById(id)) return ResponseEntity.notFound().build();

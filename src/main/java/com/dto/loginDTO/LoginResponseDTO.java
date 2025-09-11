@@ -1,4 +1,4 @@
-package com.dto.LoginDTO;
+package com.dto.loginDTO;
 
 public record LoginResponseDTO(
         String token,

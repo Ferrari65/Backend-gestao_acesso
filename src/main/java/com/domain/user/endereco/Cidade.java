@@ -22,4 +22,15 @@ public class Cidade {
 
     @Column(nullable = false, length = 2)
     private String uf;
+
+    @PrePersist
+    @PreUpdate
+    public void normalizarCampos(){
+        if(nome!=null){
+            nome = nome.trim().toUpperCase();
+        }
+        if (uf != null) {
+            uf = uf.trim().toUpperCase();
+        }
+    }
 }
