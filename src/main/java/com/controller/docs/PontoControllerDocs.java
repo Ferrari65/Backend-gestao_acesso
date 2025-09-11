@@ -1,4 +1,4 @@
-package com.controller.localizacao.docs;
+package com.controller.docs;
 
 import com.dto.localizacao.Ponto.PontoDTO;
 import com.dto.localizacao.Ponto.PontosRequestDTO;

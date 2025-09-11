@@ -1,5 +1,6 @@
 package com.controller.localizacao;
 
+import com.controller.docs.CidadesControllerDocs;
 import com.domain.user.endereco.Cidade;
 import com.dto.localizacao.CidadeRequestDTO;
 import com.repositories.localizacao.CidadeRepository;
@@ -20,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "Cidades", description = "Endpoints para manipulação completa de recursos de Cidade (CRUD)")
 @SecurityRequirement(name = "bearerAuth")
-public class CidadesController implements com.controller.localizacao.docs.CidadesControllerDocs {
+public class CidadesController implements CidadesControllerDocs {
 
     private final CidadeRepository cidadeRepository;
 

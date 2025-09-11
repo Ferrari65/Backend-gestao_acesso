@@ -24,7 +24,7 @@ import java.util.List;
 public class ColaboradorController {
     private final UserRepository userRepository;
 
-    @PreAuthorize("hasRole('GESTOR')")
+    @PreAuthorize("hasRole('GESTOR','LIDER')")
     @GetMapping
     @Operation(summary = "Listar todos colaboradores",
             description = "Listar todos colaboradores",

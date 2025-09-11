@@ -1,15 +1,10 @@
 package com.controller.localizacao;
 
+import com.controller.docs.PontoControllerDocs;
 import com.domain.user.endereco.Pontos;
 import com.dto.localizacao.Ponto.PontoDTO;
 import com.dto.localizacao.Ponto.PontosRequestDTO;
 import com.services.localizacao.PontoService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +21,7 @@ import java.util.List;
 @PreAuthorize("hasRole('GESTOR')")
 @RequestMapping("/pontos")
 @Tag(name = "Pontos", description = "Endpoints para manipulação completa de recursos de Pontos (CRUD).")
-public class PontoController implements com.controller.localizacao.docs.PontoControllerDocs {
+public class PontoController implements PontoControllerDocs {
 
     private final PontoService service;
 

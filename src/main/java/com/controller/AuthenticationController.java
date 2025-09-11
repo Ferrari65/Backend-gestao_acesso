@@ -15,20 +15,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name="Login", description = "Endpoint de Login")
-public class AuthenticationController {
+public class AuthenticationController implements com.controller.docs.AuthenticationControllerDocs {
 
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/login")
+    @Override
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO body) {
         var authToken = new UsernamePasswordAuthenticationToken(body.username(), body.senha());
         var auth = authenticationManager.authenticate(authToken);
 
 
         var user = (com.domain.user.colaborador.User) auth.getPrincipal();
-
-
         var role = (user.getRole() != null && user.getRole().getNome() != null)
                 ? user.getRole().getNome().trim().toUpperCase()
                 : "COLABORADOR";

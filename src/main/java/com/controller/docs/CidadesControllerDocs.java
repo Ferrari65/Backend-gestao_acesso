@@ -1,4 +1,4 @@
-package com.controller.localizacao.docs;
+package com.controller.docs;
 
 import com.domain.user.endereco.Cidade;
 import com.dto.localizacao.CidadeRequestDTO;
