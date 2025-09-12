@@ -16,11 +16,11 @@ import java.util.List;
 
 public interface PontoControllerDocs {
 
-    @Operation(summary = "Listar todos os pontos cadastrados",
-            description = "Retorna uma lista de todos os Pontos cadastrados no sistema.",
+    @Operation(summary = "Listar todos os pontos",
+            description = "Retorna uma lista de todos os pontos cadastrados no sistema.",
             responses = {
                     @ApiResponse(
-                            description = "Success",
+                            description = "Lista de pontos recuperada com sucesso.",
                             responseCode = "200",
                             content = {
                                     @Content(
@@ -28,97 +28,83 @@ public interface PontoControllerDocs {
                                             array = @ArraySchema(schema = @Schema(implementation = PontoDTO.class))
                                     )
                             }),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Nenhum ponto encontrado.", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Requisição malformada.", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Não autenticado. O token de acesso está ausente ou é inválido.", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Erro interno do servidor. Ocorreu um problema inesperado.", responseCode = "500", content = @Content)
             })
     ResponseEntity<List<PontoDTO>> listar();
 
-    @Operation(summary = "Buscar Ponto por ID",
-            description = "Retorna os detalhes de um Ponto específico, usando seu ID como identificador. Se o ID não for encontrado, a API retornará um erro 404 (Not Found).",
+    @Operation(summary = "Buscar ponto por ID",
+            description = "Busca e retorna os detalhes de um ponto específico pelo seu ID.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(
-                            description = "Success",
+                            description = "Ponto encontrado e retornado com sucesso.",
                             responseCode = "200",
                             content = {
                                     @Content(
                                             mediaType = "application/json",
-                                            array = @ArraySchema(schema = @Schema(implementation = PontoDTO.class))
+                                            schema = @Schema(implementation = PontoDTO.class)
                                     )
                             }),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Requisição malformada. ID do ponto inválido ou em formato incorreto.", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Não autenticado. O token de acesso está ausente ou é inválido.", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Ponto não encontrado.", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Erro interno do servidor. Ocorreu um problema inesperado.", responseCode = "500", content = @Content)
             })
     ResponseEntity<PontoDTO> buscar(@PathVariable Integer id);
 
 
-    @Operation(summary = "Atualizar um Ponto existente",
-            description = "Atualiza completamente as informações de um Ponto existente, substituindo os dados com base no ID. O corpo da requisição deve conter um objeto PontosRequestDTO com os novos dados. Retorna o objeto PontoDTO atualizado e o status 200 (OK).",
+    @Operation(summary = "Atualizar um ponto existente",
+            description = "Atualiza completamente as informações de um ponto existente, substituindo os dados com base no ID.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(
-                            description = "Success",
+                            description = "Ponto atualizado com sucesso.",
                             responseCode = "200",
                             content = {
                                     @Content(
                                             mediaType = "application/json",
-                                            array = @ArraySchema(schema = @Schema(implementation = PontoDTO.class))
+                                            schema = @Schema(implementation = PontoDTO.class)
                                     )
                             }),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Requisição malformada. Dados ausentes ou em formato incorreto.", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Não autenticado. O token de acesso está ausente ou é inválido.", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Ponto não encontrado.", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Erro interno do servidor. Ocorreu um problema inesperado.", responseCode = "500", content = @Content)
             })
     ResponseEntity<PontoDTO> atualizar(@PathVariable Integer id,
                                        @Valid @RequestBody PontosRequestDTO dto);
 
-    @Operation(summary = "Criar novo Ponto",
-            description = "Cria um novo Ponto com base nas informações fornecidas no corpo da requisição (PontosRequestDTO). O ID do novo Ponto é gerado automaticamente. Em caso de sucesso, retorna o objeto PontoDTO recém-criado e o status 201 (Created), com a URL do novo recurso.",
+    @Operation(summary = "Criar novo ponto",
+            description = "Cria um novo ponto com base nas informações fornecidas no corpo da requisição. O ID do novo ponto é gerado automaticamente.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                     @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
+                            description = "Ponto criado com sucesso.",
+                            responseCode = "201",
                             content = {
                                     @Content(
                                             mediaType = "application/json",
-                                            array = @ArraySchema(schema = @Schema(implementation = PontoDTO.class))
+                                            schema = @Schema(implementation = PontoDTO.class)
                                     )
                             }),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Requisição malformada. Dados ausentes ou em formato incorreto.", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Não autenticado. O token de acesso está ausente ou é inválido.", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Erro interno do servidor. Ocorreu um problema inesperado.", responseCode = "500", content = @Content)
             })
     ResponseEntity<PontoDTO> criar(@Valid @RequestBody PontosRequestDTO dto);
 
-    @Operation(summary = "Remover Ponto por ID",
-            description = "Exclui permanentemente um Ponto do sistema, com base no ID fornecido. Esta é uma operação irreversível. Em caso de sucesso, retorna o status 204 (No Content).",
+    @Operation(summary = "Remover ponto por ID",
+            description = "Exclui permanentemente um ponto do sistema, com base no ID fornecido. Esta é uma operação irreversível.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
-                    @ApiResponse(
-                            description = "Success",
-                            responseCode = "200",
-                            content = {
-                                    @Content(
-                                            mediaType = "application/json",
-                                            array = @ArraySchema(schema = @Schema(implementation = PontoDTO.class))
-                                    )
-                            }),
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(description = "Ponto deletado com sucesso. Nenhum conteúdo retornado.", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Requisição malformada. ID do ponto inválido ou em formato incorreto.", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Não autenticado. O token de acesso está ausente ou é inválido.", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Ponto não encontrado.", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Erro interno do servidor. Ocorreu um problema inesperado.", responseCode = "500", content = @Content)
             })
     ResponseEntity<Void> excluir(@PathVariable Integer id);
 }

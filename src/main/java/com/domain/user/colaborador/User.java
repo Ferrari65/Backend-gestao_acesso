@@ -52,6 +52,7 @@ public class User implements UserDetails {
     @Column(name = "ativo", nullable = false)
     private Boolean ativo = true;
 
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         String roleName = (role != null && role.getRoleName() != null)
