@@ -26,7 +26,6 @@ public class AuthenticationController implements com.controller.docs.Authenticat
         var authToken = new UsernamePasswordAuthenticationToken(body.username(), body.senha());
         var auth = authenticationManager.authenticate(authToken);
 
-
         var user = (com.domain.user.colaborador.User) auth.getPrincipal();
         var role = (user.getRole() != null && user.getRole().getNome() != null)
                 ? user.getRole().getNome().trim().toUpperCase()

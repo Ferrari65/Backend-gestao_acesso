@@ -64,14 +64,10 @@ public class User implements UserDetails {
 
 
     @Override public String getPassword()               { return senha; }
-    @Override public String getUsername()               { return email; }
+    @Override public String getUsername() { return email != null ? email : matricula; }
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-
-    @Override
-    public boolean isEnabled() {
-        return Boolean.TRUE.equals(ativo);
-    }
+    @Override public boolean isEnabled() { return ativo; }
 
 }
