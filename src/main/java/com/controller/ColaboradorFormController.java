@@ -1,96 +1,139 @@
 package com.controller;
 
-import com.domain.user.Enum.Periodo;
 import com.domain.user.Enum.StatusForm;
-import com.domain.user.endereco.Cidade;
+import com.dto.colaborador.ColaboradorDTO;
 import com.dto.colaborador.FormCreateRequest;
 import com.dto.colaborador.FormResponse;
-import com.dto.colaborador.FormStatusUpdateRequest;
-import com.services.AuthorizationService;
+import com.repositories.UserRepository;
 import com.services.colaborador.ColaboradorFormService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping
+@RequestMapping(value = "/forms", produces = "application/json")
 @RequiredArgsConstructor
-@Tag(name = "Colaborador-Form",
-    description = "Gerenciar Formulários de Colaboradores: Endpoint para criar, ler, atualizar e excluir formulários de colaboradores.")
-public class ColaboradorFormController {
+@Tag(name = "Gestão de Aviso Prévio", description = "Criação, listagem e atualização de status de formulários.")
+@SecurityRequirement(name = "bearerAuth")
+public class ColaboradorFormController implements com.controller.docs.ColaboradorFormControllerDocs {
 
     private final ColaboradorFormService service;
-    private final AuthorizationService auth;
+    private final UserRepository userRepository;
 
-    @PostMapping("/me/form")
-    @PreAuthorize("hasAnyRole('COLABORADOR','LIDER','GESTOR')")
-    @Operation(summary = "Cadastrar rota preferida do usuário",
-               description = "Permite que colaboradores, líderes e gestores salvem sua rota preferida para otimizar o fluxo de trabalho.",
-            responses = {
-                    @ApiResponse(
-                            description = "Formulario cadastrado com sucesso.",
-                            responseCode = "200",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    array = @ArraySchema(schema = @Schema(implementation = Cidade.class))
-                            )
-                    ),
-                    @ApiResponse(description = "Requisição malformada.", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Não autenticado. Token de acesso ausente ou inválido.", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Recurso não encontrado.", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Erro interno do servidor. Ocorreu um problema inesperado.", responseCode = "500", content = @Content)
-            }
-    )
-    public ResponseEntity<FormResponse> criarMeuForm(@RequestBody FormCreateRequest req) {
-        UUID idColab = auth.getCurrentUserId();
-        var resp = service.criarPara(idColab, req);
-        return ResponseEntity.ok(resp);
+    @PostMapping(consumes = "application/json")
+    @PreAuthorize("hasRole('COLABORADOR')")
+    @Override
+    public FormResponse criar(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "Dados para criação do formulário. A estrutura do objeto `dados` pode variar de acordo com o tipo de formulário.",
+                    content = @Content(schema = @Schema(implementation = FormCreateRequest.class))
+            )
+            @RequestBody FormCreateRequest request
+    ) {
+        ColaboradorDTO colab = resolveColaboradorDTO();
+        return service.criarPara(colab, request);
     }
 
-//    @PostMapping("/colaboradores/{idColaborador}/form")
-//    @PreAuthorize("hasRole('GESTOR')")
-//    public ResponseEntity<FormResponse> criarEmNomeDe(
-//            @PathVariable UUID idColaborador,
-//            @RequestBody FormCreateRequest req) {
-//        var resp = service.criarPara(idColaborador, req);
-//        return ResponseEntity.ok(resp);
-//    }
-
-//    @GetMapping("/me/form")
-//    @PreAuthorize("hasAnyRole('COLABORADOR','LIDER','GESTOR')")
-//    public List<FormResponse> meusForms() {
-//        UUID idColab = auth.getCurrentUserId();
-//        return service.meusFormularios(idColab);
-//    }
-
-    @GetMapping("/forms")
-    @PreAuthorize("hasRole('GESTOR')")
-    @Operation(summary = "Listagem de formulario filtrado")
-    public List<FormResponse> listar(
-            @RequestParam(required = false) Integer idCidade,
-            @RequestParam(required = false) Periodo turno,
-            @RequestParam(required = false) StatusForm status) {
-        return service.listar(idCidade, turno, status);
+    @GetMapping("/colaboradorAviso")
+    @PreAuthorize("hasRole('COLABORADOR')")
+    @Override
+    public List<FormResponse> meus(
+            @Parameter(
+                    in = ParameterIn.QUERY,
+                    description = "Filtra a lista de formulários pelo status. Se omitido, todos os formulários do colaborador são retornados.",
+                    schema = @Schema(implementation = StatusForm.class,
+                            description = "Os valores aceitos para o filtro de status são **ABERTO**, **APROVADO**, **REPROVADO**, **CANCELADO**.")
+            )
+            @RequestParam(required = false) StatusForm status
+    ) {
+        ColaboradorDTO colab = resolveColaboradorDTO();
+        return service.listarTodosDoColaborador(colab.idColaborador(), status);
     }
 
-    @PatchMapping("/forms/{idForm}/status")
+    @GetMapping
+    @PreAuthorize("hasAnyRole('GESTOR')")
+    @Override
+    public List<FormResponse> todos(
+            @Parameter(
+                    in = ParameterIn.QUERY,
+                    description = "Filtra a lista de formulários pelo status. Se omitido, todos os formulários são retornados.",
+                    schema = @Schema(implementation = StatusForm.class,
+                            description = "Os valores aceitos são **ABERTO**, **APROVADO**, **REPROVADO**, **CANCELADO**.")
+            )
+            @RequestParam(required = false) StatusForm status
+    ) {
+        return service.listarTodos(status);
+    }
+
+    @PatchMapping(path = "/{id}/status", consumes = "application/json")
     @PreAuthorize("hasRole('GESTOR')")
-    @Operation(summary = "Atualizar Status do Formulário",
-               description = "Exclusivo para gestores, este endpoint permite alterar o status de um formulário existente, por exemplo, de PENDENTE para APROVADO.")
-    public ResponseEntity<FormResponse> atualizarStatus(
-            @PathVariable UUID idForm,
-            @RequestBody FormStatusUpdateRequest req) {
-        var resp = service.atualizarStatus(idForm, req.status());
-        return ResponseEntity.ok(resp);
+    @Override
+    public FormResponse atualizarStatus(
+            @Parameter(description = "ID único do formulário a ser atualizado.", required = true)
+            @PathVariable UUID id,
+
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "O novo status desejado para o formulário. O corpo da requisição deve ser uma string JSON simples com um dos valores do enum.",
+                    content = @Content(
+                            schema = @Schema(
+                                    implementation = StatusForm.class,
+                                    description = "Valores de status aceitos: **ABERTO**, **APROVADO**, **REPROVADO**, **CANCELADO**."
+                            ),
+                            examples = {
+                                    @ExampleObject(name = "Aprovar", value = "\"APROVADO\""),
+                                    @ExampleObject(name = "Reprovar", value = "\"REPROVADO\""),
+                                    @ExampleObject(name = "Cancelar", value = "\"CANCELADO\"")
+                            }
+                    )
+            )
+            @RequestBody StatusForm novoStatus
+    ) {
+        UUID idUsuarioAcionador = resolveColaboradorDTO().idColaborador();
+        return service.atualizarStatus(id, novoStatus, idUsuarioAcionador);
+    }
+
+    private ColaboradorDTO resolveColaboradorDTO() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            throw new IllegalStateException("Usuário não autenticado.");
+        }
+        String email = auth.getName();
+
+        var u = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Usuário não encontrado pelo email autenticado."));
+
+        return new ColaboradorDTO(
+                u.getIdColaborador(),
+                null,
+                null,
+                null,
+                null,
+                u.getNome(),
+                u.getMatricula(),
+                u.getCpf(),
+                u.getEmail(),
+                u.getDataNasc(),
+                u.getLogradouro(),
+                u.getBairro(),
+                u.getNumero(),
+                u.getAtivo()
+        );
     }
 }

@@ -19,8 +19,7 @@ public interface LiderRotaControllerDocs {
     @Operation(
             operationId = "atribuirLiderARota",
             summary = "Atribuir líder a uma rota",
-            description = "Vincula um colaborador existente como líder da rota informada. " +
-                    "Operação idempotente: replays não criam duplicatas.",
+            description = "Vincula um colaborador existente como líder da rota informada. ",
             parameters = {
                     @Parameter(name = "idRota", in = ParameterIn.PATH, required = true,
                             description = "Identificador numérico da rota.", example = "42"),
@@ -51,8 +50,8 @@ public interface LiderRotaControllerDocs {
 
     @Operation(
             operationId = "listarLideresDaRota",
-            summary = "Listar líderes da rota",
-            description = "Retorna a relação de líderes atualmente vinculados à rota especificada.",
+            summary = "Listar líderes **ATIVOS** da rota",
+            description = "Retorna a relação de líderes atualmente ATIVOS vinculados à rota especificada.",
             parameters = {
                     @Parameter(name = "idRota", in = ParameterIn.PATH, required = true,
                             description = "Identificador numérico da rota.", example = "42")
@@ -77,8 +76,8 @@ public interface LiderRotaControllerDocs {
 
     @Operation(
             operationId = "removerLiderDaRota",
-            summary = "Remover líder da rota",
-            description = "Desvincula o colaborador (líder) da rota informada.",
+                summary = "**INATIVAS** líder da rota ",
+            description = "Marca o vínculo do colaborador como INATIVO para a rota informada. Não remove histórico.",
             responses = {
                     @ApiResponse(
                             description = "Líder removido com sucesso. Nenhum conteúdo retornado.",

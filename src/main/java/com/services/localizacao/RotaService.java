@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RotaService {
 
-    // ❌ NÃO usar static aqui
     private final RotaRepository rotaRepo;
     private final CidadeRepository cidadeRepo;
     private final PontosRepository pontoRepo;

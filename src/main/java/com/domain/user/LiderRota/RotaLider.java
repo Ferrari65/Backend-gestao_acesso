@@ -26,4 +26,19 @@ public class RotaLider {
     @Column(name = "data_atribuicao")
     private LocalDateTime dataAtribuicao;
 
+    @Column(name = "ativo", nullable = false)
+    private boolean ativo = true;
+
+    @Column(name = "data_inativacao")
+    private LocalDateTime dataInativacao;
+
+    @PrePersist
+    public void prePersist() {
+        if (dataAtribuicao == null) {
+            dataAtribuicao = LocalDateTime.now();
+        }
+        if (dataInativacao != null) {
+            ativo = false;
+        }
+    }
 }

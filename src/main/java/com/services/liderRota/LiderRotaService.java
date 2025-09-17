@@ -54,7 +54,7 @@ public class LiderRotaService {
         var rota = rotaRepo.findById(idRota)
                 .orElseThrow(() -> new NoSuchElementException("Rota não encontrada"));
 
-        var ids = liderRotaRepo.findLideresDaRota(idRota);
+        var ids = liderRotaRepo.findLideresDaRota(idRota); // apenas ATIVOS
         List<LiderRotaResponse> resp = new ArrayList<>(ids.size());
 
         for (UUID idColab : ids) {
@@ -74,8 +74,7 @@ public class LiderRotaService {
 
     @Transactional
     public void remover(Integer idRota, UUID idColaborador) {
-
-        liderRotaRepo.deleteUmLider(idRota, idColaborador);
+        liderRotaRepo.inativarLider(idRota, idColaborador);
 
         boolean aindaLider = liderRotaRepo.isLiderEmAlgumaRota(idColaborador);
         if (!aindaLider) {

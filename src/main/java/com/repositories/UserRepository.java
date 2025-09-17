@@ -12,6 +12,20 @@ import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
 
+
+    interface Resumo {
+        String getNome();
+        String getMatricula();
+    }
+
+    @Query("""
+        select u.nome as nome, u.matricula as matricula
+        from User u
+        where u.idColaborador = :id
+    """)
+    Optional<Resumo> findResumoByIdColaborador(@Param("id") UUID id);
+
+
     @Query("select u from User u where lower(u.email) = lower(:email)")
     Optional<User> findByEmail(@Param("email") String email);
     Optional<User> findByMatricula(String matricula);
@@ -19,5 +33,4 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @EntityGraph(attributePaths = {"cidade", "role"})
     @Query("select u from User u")
     List<User> findAllWithCidadeAndRole();
-
 }
