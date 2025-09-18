@@ -22,9 +22,13 @@ public record RotaDTO (
 ) {
     public static RotaDTO from(Rota r) {
         var itens = r.getPontos().stream()
-                .map(rp -> new RotaPontoItemDTO(rp.getOrdem(),
+                .map(rp -> new RotaPontoItemDTO(
+                        rp.getOrdem(),
                         rp.getPonto().getIdPonto(),
-                        rp.getPonto().getNome()))
+                        rp.getPonto().getNome(),
+                        rp.getPonto().getLatitude(),
+                        rp.getPonto().getLongitude()
+                ))
                 .toList();
 
         return new RotaDTO(

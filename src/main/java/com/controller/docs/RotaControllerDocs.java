@@ -2,6 +2,7 @@ package com.controller.docs;
 
 import com.dto.PATCH.RotaPatchDTO;
 import com.dto.localizacao.Rota.RotaDTO;
+import com.dto.localizacao.Rota.RotaPontoItemDTO;
 import com.dto.localizacao.Rota.RotaRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,8 +10,10 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -137,4 +140,19 @@ public interface RotaControllerDocs {
                     @ApiResponse(description = "Erro interno do servidor.", responseCode = "500", content = @Content)
             })
     ResponseEntity<Void> deletar(@Parameter(description = "ID da rota a ser deletada.", example = "1") @PathVariable Integer idRota);
+
+
+    @Operation(
+            summary = "Obter trajeto da rota",
+            description = "Retorna a sequência de pontos (com latitude/longitude) para desenhar o percurso no mapa.**LIDER** **COLABORADOR**"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Trajeto retornado com sucesso",
+                    content = @Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = RotaPontoItemDTO.class)))),
+            @ApiResponse(responseCode = "204", description = "Rota sem pontos cadastrados"),
+            @ApiResponse(responseCode = "404", description = "Rota não encontrada")
+    })
+    ResponseEntity<List<RotaPontoItemDTO>> trajeto(@PathVariable Integer idRota);
+
 }

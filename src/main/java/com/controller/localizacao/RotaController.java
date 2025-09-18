@@ -2,6 +2,7 @@ package com.controller.localizacao;
 
 import com.dto.PATCH.RotaPatchDTO;
 import com.dto.localizacao.Rota.RotaDTO;
+import com.dto.localizacao.Rota.RotaPontoItemDTO;
 import com.dto.localizacao.Rota.RotaRequestDTO;
 import com.services.localizacao.RotaService;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -73,5 +74,13 @@ public class RotaController implements com.controller.docs.RotaControllerDocs {
     public ResponseEntity<Void> deletar(@Parameter(description = "ID da rota a ser deletada.", example = "1") @PathVariable Integer idRota) {
         service.deletar(idRota);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{idRota}/trajeto")
+    @PreAuthorize("hasAnyRole('COLABORADOR','LIDER')")
+    @Override
+    public ResponseEntity<List<RotaPontoItemDTO>> trajeto(@PathVariable Integer idRota) {
+        var dto = service.listarTrajeto(idRota);
+        return dto.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(dto);
     }
 }

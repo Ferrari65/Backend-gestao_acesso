@@ -5,8 +5,10 @@ import com.domain.user.Rotas.RotaPonto;
 import com.domain.user.Rotas.RotaPontoId;
 import com.domain.user.endereco.Pontos;
 import com.dto.PATCH.RotaPatchDTO;
+import com.dto.localizacao.Rota.RotaPontoItemDTO;
 import com.dto.localizacao.Rota.RotaPontoItemRequestDTO;
 import com.dto.localizacao.Rota.RotaRequestDTO;
+import com.repositories.Rota.RotaPontoRepository;
 import com.repositories.Rota.RotaRepository;
 import com.repositories.localizacao.CidadeRepository;
 import com.repositories.localizacao.PontosRepository;
@@ -28,6 +30,7 @@ public class RotaService {
     private final RotaRepository rotaRepo;
     private final CidadeRepository cidadeRepo;
     private final PontosRepository pontoRepo;
+    private final RotaPontoRepository rotaPontoRepo;
 
     private static final DateTimeFormatter HHMMSS = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -195,6 +198,12 @@ public class RotaService {
                     return rp;
                 })
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RotaPontoItemDTO> listarTrajeto(Integer idRota){
+    rotaRepo.findById(idRota).orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
+    return rotaPontoRepo.listarPontosDTO(idRota);
     }
 
     private RuntimeException conflito(String msg) {
