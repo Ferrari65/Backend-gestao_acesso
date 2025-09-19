@@ -15,7 +15,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "colaboradores")
+@Table(name = "colaboradores",
+        indexes = {
+                @Index(name = "idx_colab_email", columnList = "email")})
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
