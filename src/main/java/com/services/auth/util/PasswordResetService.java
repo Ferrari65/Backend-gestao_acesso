@@ -21,7 +21,7 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 public class PasswordResetService {
 
-    private final PasswordResetTokenRepository tokenRepo;   // <— INJETADO
+    private final PasswordResetTokenRepository tokenRepo;
     private final UserRepository userRepo;
     private final @Qualifier("smtpEmailSender") EmailSender emailSender;
     private final PasswordEncoder encoder;

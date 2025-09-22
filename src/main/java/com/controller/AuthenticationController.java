@@ -6,8 +6,6 @@ import com.dto.loginDTO.LoginRequestDTO;
 import com.dto.loginDTO.LoginResponseDTO;
 import com.infra.TokenService;
 import com.services.auth.util.PasswordResetService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,27 +17,22 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name="Login", description = "Endpoint de Login")
+@Tag(name = "Autenticação", description = "Gerenciamento de login e recuperação de senha")
 public class AuthenticationController implements com.controller.docs.AuthenticationControllerDocs {
 
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
     private final PasswordResetService resetService;
 
-    @GetMapping("/reset-password")
-    public ResponseEntity<String> validate(@RequestParam String token) {
-        resetService.validateTokenOnly(token);   // <- resetService (correto)
-        return ResponseEntity.ok("Token válido. Agora envie POST /auth/reset-password com a nova senha.");
-    }
-
-
     @PostMapping("/forgot-password")
+    @Override
     public ResponseEntity<Void> forgot(@RequestBody @Valid ForgotPasswordRequest req) {
         resetService.forgotPassword(req.email());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reset-password")
+    @Override
     public ResponseEntity<Void> reset(@RequestBody @Valid ResetPasswordRequest req) {
         resetService.resetPassword(req.token(), req.newPassword());
         return ResponseEntity.noContent().build();
@@ -66,7 +59,5 @@ public class AuthenticationController implements com.controller.docs.Authenticat
         var token = tokenService.generateToken(user, authMode);
 
         return ResponseEntity.ok(new LoginResponseDTO(token, user.getEmail(), role, homePath));
-
-
     }
 }
