@@ -15,13 +15,11 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration c = new CorsConfiguration();
 
-        c.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173"
-        ));
+        c.addAllowedOrigin("*");
         c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
-        c.setAllowedHeaders(List.of("*"));
+        c.addAllowedHeader("*");
         c.setExposedHeaders(List.of("Authorization","Location","Link","X-Total-Count"));
-        c.setAllowCredentials(true);
+        c.setAllowCredentials(false);
         c.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

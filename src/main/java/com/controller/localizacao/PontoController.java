@@ -4,7 +4,7 @@ import com.controller.docs.PontoControllerDocs;
 import com.domain.user.endereco.Pontos;
 import com.dto.localizacao.Ponto.PontoDTO;
 import com.dto.localizacao.Ponto.PontosRequestDTO;
-import com.services.localizacao.PontoService;
+import com.services.localizacao.impl.PontoServiceImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import java.util.List;
 @Tag(name = "Pontos", description = "Endpoints para manipulação completa de recursos de Pontos (CRUD).")
 public class PontoController implements PontoControllerDocs {
 
-    private final PontoService service;
+    private final PontoServiceImpl service;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('GESTOR','LIDER')")

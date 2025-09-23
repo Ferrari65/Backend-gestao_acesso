@@ -1,72 +1,15 @@
 package com.services.localizacao;
 
 import com.domain.user.endereco.Pontos;
-import com.domain.user.endereco.Cidade;
 import com.dto.localizacao.Ponto.PontosRequestDTO;
-import com.repositories.localizacao.CidadeRepository;
-import com.repositories.localizacao.PontosRepository;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class PontoService {
+public interface PontoService {
 
-    private final PontosRepository repository;
-    private final CidadeRepository cidadeRepository;
-
-    public List<Pontos> listar() {
-        return repository.findAll();
-    }
-
-    public Pontos buscar(Integer id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Ponto não encontrado"));
-    }
-
-    @Transactional
-    public Pontos atualizar(Integer id, PontosRequestDTO dto) {
-        var p = buscar(id);
-
-        if (!p.getCidade().getIdCidade().equals(dto.idCidade())) {
-            Cidade cidade = cidadeRepository.findById(dto.idCidade())
-                    .orElseThrow(() -> new EntityNotFoundException("Cidade não encontrada"));
-            p.setCidade(cidade);
-        }
-
-        var nome = dto.nome().trim();
-        p.setNome(nome);
-        p.setEndereco(dto.endereco());
-        p.setLatitude(dto.latitude());
-        p.setLongitude(dto.longitude());
-
-        return repository.save(p);
-    }
-
-    public Pontos criar(PontosRequestDTO dto) {
-        var cidade = cidadeRepository.findById(dto.idCidade())
-                .orElseThrow(() -> new EntityNotFoundException("Cidade não encontrada"));
-
-        var nome = dto.nome().trim();
-        var p = new Pontos();
-        p.setCidade(cidade);
-        p.setNome(nome);
-        p.setEndereco(dto.endereco());
-        p.setLatitude(dto.latitude());
-        p.setLongitude(dto.longitude());
-
-        return repository.save(p);
-    }
-
-    @Transactional
-    public void excluir (Integer id){
-        if (!repository.existsById(id)){
-            throw  new EntityNotFoundException("Ponto não encontrado");
-        }
-        repository.deleteById(id);
-    }
+    List<Pontos> listar();
+    Pontos buscar (Integer id);
+    Pontos criar (PontosRequestDTO dto);
+    Pontos atualizar (Integer id, PontosRequestDTO dto);
+    void excluir (Integer id);
 }
