@@ -24,7 +24,10 @@ COPY --from=build --chown=trackpass:trackpass /workspace/target/*.jar /app/app.j
 # Default para produção (Render pode sobrescrever para 'dev' no ambiente local/compose)
 ENV SPRING_PROFILES_ACTIVE=prod
 # Render injeta PORT; seu application.properties já usa server.port=${PORT:8080}
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -Duser.timezone=America/Sao_Paulo -Dfile.encoding=UTF-8"
+FROM eclipse-temurin:21-jre-alpine
+RUN apk add --no-cache ca-certificates
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -Duser.timezone=America/Sao_Paulo -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true"
+
 
 EXPOSE 8080
 USER trackpass
