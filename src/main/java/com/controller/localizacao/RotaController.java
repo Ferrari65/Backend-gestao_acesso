@@ -4,7 +4,7 @@ import com.dto.PATCH.RotaPatchDTO;
 import com.dto.localizacao.Rota.RotaDTO;
 import com.dto.localizacao.Rota.RotaPontoItemDTO;
 import com.dto.localizacao.Rota.RotaRequestDTO;
-import com.services.localizacao.RotaService;
+import com.services.impl.RotaServiceImpl;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,7 +24,7 @@ import java.util.List;
 @Tag(name = "Rota", description = "Endpoints para manipulação completa de recursos de Rota (CRUD)")
 public class RotaController implements com.controller.docs.RotaControllerDocs {
 
-    private final RotaService service;
+    private final RotaServiceImpl service;
 
     @GetMapping
     @Override

@@ -1,4 +1,4 @@
-package com.services.motorista.impl;
+package com.services.impl;
 
 import com.dto.Motorista.MotoristaResponseDTO;
 import com.repositories.Motorista.MotoristaRepository;

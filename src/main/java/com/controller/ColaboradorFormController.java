@@ -5,15 +5,12 @@ import com.dto.colaborador.ColaboradorDTO;
 import com.dto.colaborador.FormCreateRequest;
 import com.dto.colaborador.FormResponse;
 import com.repositories.UserRepository;
-import com.services.colaborador.ColaboradorFormService;
-import io.swagger.v3.oas.annotations.Operation;
+import com.services.impl.ColaboradorFormServiceImpl;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +29,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 public class ColaboradorFormController implements com.controller.docs.ColaboradorFormControllerDocs {
 
-    private final ColaboradorFormService service;
+    private final ColaboradorFormServiceImpl service;
     private final UserRepository userRepository;
 
     @PostMapping(consumes = "application/json")

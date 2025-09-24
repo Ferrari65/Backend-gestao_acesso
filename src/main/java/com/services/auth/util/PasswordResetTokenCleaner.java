@@ -18,7 +18,7 @@ public class PasswordResetTokenCleaner {
         var now = Instant.now();
         int deleted = tokenRepo.deleteByExpiresAtBeforeOrUsedTrue(now);
         if (deleted > 0) {
-            System.out.println("🧹 Tokens inválidos removidos: " + deleted);
+            System.out.println(" Tokens inválidos removidos: " + deleted);
         }
     }
 }

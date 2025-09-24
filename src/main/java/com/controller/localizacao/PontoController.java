@@ -4,7 +4,7 @@ import com.controller.docs.PontoControllerDocs;
 import com.domain.user.endereco.Pontos;
 import com.dto.localizacao.Ponto.PontoDTO;
 import com.dto.localizacao.Ponto.PontosRequestDTO;
-import com.services.localizacao.impl.PontoServiceImpl;
+import com.services.impl.PontoServiceImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

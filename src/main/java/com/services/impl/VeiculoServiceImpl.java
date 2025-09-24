@@ -1,4 +1,4 @@
-package com.services.veiculo.impl;
+package com.services.impl;
 
 import com.domain.user.veiculo.Veiculo;
 import com.dto.veiculo.VeiculoRequestDTO;

@@ -1,7 +1,7 @@
 package com.controller;
 
 import com.dto.liderRota.LiderRotaResponse;
-import com.services.liderRota.LiderRotaService;
+import com.services.impl.LiderRotaServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 public class LiderRotaController implements com.controller.docs.LiderRotaControllerDocs {
 
-    private final LiderRotaService service;
+    private final LiderRotaServiceImpl service;
 
     @PutMapping("/{idColaborador}")
     @PreAuthorize("hasRole('GESTOR')")

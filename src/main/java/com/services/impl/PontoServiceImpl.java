@@ -1,4 +1,4 @@
-package com.services.localizacao.impl;
+package com.services.impl;
 
 import com.domain.user.endereco.Pontos;
 import com.domain.user.endereco.Cidade;

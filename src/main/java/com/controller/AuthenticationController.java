@@ -5,6 +5,7 @@ import com.dto.auth.ResetPasswordRequest;
 import com.dto.loginDTO.LoginRequestDTO;
 import com.dto.loginDTO.LoginResponseDTO;
 import com.infra.TokenService;
+import com.services.AuthorizationService;
 import com.services.auth.util.PasswordResetService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,6 +24,7 @@ public class AuthenticationController implements com.controller.docs.Authenticat
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
     private final PasswordResetService resetService;
+    private final AuthorizationService authorizationService;
 
     @PostMapping("/forgot-password")
     @Override
@@ -41,10 +43,9 @@ public class AuthenticationController implements com.controller.docs.Authenticat
     @PostMapping("/login")
     @Override
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO body) {
-        var authToken = new UsernamePasswordAuthenticationToken(body.username(), body.senha());
-        var auth = authenticationManager.authenticate(authToken);
 
-        var user = (com.domain.user.colaborador.User) auth.getPrincipal();
+        var user = authorizationService.authenticate(body.username(), body.senha());
+
         var role = (user.getRole() != null && user.getRole().getNome() != null)
                 ? user.getRole().getNome().trim().toUpperCase()
                 : "COLABORADOR";
