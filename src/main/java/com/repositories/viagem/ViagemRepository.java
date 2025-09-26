@@ -11,6 +11,5 @@ import java.util.UUID;
 public interface ViagemRepository extends JpaRepository<ViagemRota, UUID> {
 
     List<ViagemRota> findByIdRota(Integer idRota);
-    List<ViagemRota> findByTipoViagem(TipoViagem tipoViagem);
-    List<ViagemRota> findBySaidaPrevistaBetween(LocalDate inicio, LocalDate fim);
+    List<ViagemRota> findByAtivo(boolean ativo);
 }

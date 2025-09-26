@@ -44,7 +44,21 @@ public class ViagemRota {
     @Column(name = "tipo_viagem", nullable = false, columnDefinition = "tipo_viagem")
     private TipoViagem tipoViagem;
 
+    private boolean ativo = true;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, columnDefinition = "timestamptz")
     private OffsetDateTime createdAt;
+
+    private OffsetDateTime updated;
+
+    @PrePersist
+    void prePersist(){
+        var now = OffsetDateTime.now();
+        this.createdAt = now;
+        this.updated = now;
+    }
+
+    @PreUpdate
+    void preUpdate() { this.updated = OffsetDateTime.now(); }
 }

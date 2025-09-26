@@ -15,7 +15,9 @@ public record ViagemRotaResponseDTO(
         LocalDate saidaPrecista,
         LocalDate chegadaPrevista,
         TipoViagem tipoViagem,
-        OffsetDateTime createdAt
+        boolean ativo,
+        OffsetDateTime createdAt,
+        OffsetDateTime updated
 ) {
     public static ViagemRotaResponseDTO fromEntity (ViagemRota v) {
         return new ViagemRotaResponseDTO(
@@ -26,7 +28,9 @@ public record ViagemRotaResponseDTO(
                 v.getSaidaPrevista(),
                 v.getChegadaPrevista(),
                 v.getTipoViagem(),
-                v.getCreatedAt()
+                v.isAtivo(),
+                v.getCreatedAt(),
+                v.getUpdated()
         );
     }
 }

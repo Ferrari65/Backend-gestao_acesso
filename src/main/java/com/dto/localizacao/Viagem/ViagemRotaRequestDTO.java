@@ -13,6 +13,5 @@ public record ViagemRotaRequestDTO(
         Integer idVeiculo,
         LocalDate saidaPrevista,
         LocalDate chegadaPrevista,
-        TipoViagem tipoViagem,
-        OffsetDateTime createdAt
+        TipoViagem tipoViagem
 ) {}
