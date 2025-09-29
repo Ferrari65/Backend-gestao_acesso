@@ -2,7 +2,6 @@ package com.services.colaborador;
 
 import com.dto.colaborador.ColaboradorDTO;
 import com.repositories.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
