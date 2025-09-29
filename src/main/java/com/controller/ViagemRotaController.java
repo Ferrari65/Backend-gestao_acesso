@@ -20,7 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/viagens")
 @RequiredArgsConstructor
-@Tag(name = "Viagens", description = "CRUD de viagens (soft-delete via campo 'ativo')")
+@Tag(name = "Viagens", description = "Endpoints para gerenciamento de viagens ")
 public class ViagemRotaController {
 
     private final ViagemRotaService service;

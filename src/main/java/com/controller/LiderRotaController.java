@@ -16,7 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/rotas/{idRota}/lideres")
 @Tag(name = "Líderes de Rotas",
-        description = "Gerenciamento de líderes vinculados a rotas (atribuir, listar e remover).")
+        description = "Endpoints para gerenciamento de líderes (atribuir, listar e remover).")
 @SecurityRequirement(name = "bearerAuth")
 public class LiderRotaController implements com.controller.docs.LiderRotaControllerDocs {
 

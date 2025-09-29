@@ -21,7 +21,7 @@ import java.util.List;
 @RequestMapping("/rotas")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Rota", description = "Endpoints para manipulação completa de recursos de Rota (CRUD)")
+@Tag(name = "Rota", description = "Endpoints para gerenciamento de Rota")
 public class RotaController implements com.controller.docs.RotaControllerDocs {
 
     private final RotaServiceImpl service;

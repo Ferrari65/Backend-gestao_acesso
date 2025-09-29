@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @PreAuthorize("hasRole('GESTOR')")
 @RequestMapping("/pontos")
-@Tag(name = "Pontos", description = "Endpoints para manipulação completa de recursos de Pontos (CRUD).")
+@Tag(name = "Pontos", description = "Endpoints para gerenciamento de Pontos")
 public class PontoController implements PontoControllerDocs {
 
     private final PontoServiceImpl service;

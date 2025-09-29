@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/colaboradores")
-@Tag(name="Colaboradores", description = "Endpoints para manipulação completa de recursos de Colaborador (CRUD).")
+@Tag(name="Colaboradores", description = "Endpoints para gerenciamento de Colaborador")
 public class ColaboradorController {
     private final ColaboradorService service;
 

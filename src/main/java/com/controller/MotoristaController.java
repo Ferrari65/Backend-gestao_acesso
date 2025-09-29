@@ -20,7 +20,7 @@ import java.util.List;
 @RequestMapping("/motorista")
 @RequiredArgsConstructor
 @Tag( name = "Motoristas",
-        description = "Consulta de motorista ativos")
+        description = "Endpoints para gerenciamento de Motorista")
 public class MotoristaController {
 
     private final MotoristaService service;
