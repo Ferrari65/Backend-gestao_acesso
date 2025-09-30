@@ -9,8 +9,6 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 mvn -q -B -DskipTests clean package
 
 FROM eclipse-temurin:21-jre-alpine
-RUN apk add --no-cache tzdata && cp /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && echo "America/Sao_Paulo" > /etc/timezone
-
 RUN addgroup -S app && adduser -S -G app -D app
 USER app
 
