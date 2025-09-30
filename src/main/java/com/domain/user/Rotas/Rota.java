@@ -30,7 +30,6 @@ public class Rota {
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "periodo", nullable = false, columnDefinition = "periodo")
     private Periodo periodo;
 
     private Integer capacidade;

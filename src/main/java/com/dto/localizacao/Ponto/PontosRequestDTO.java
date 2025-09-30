@@ -6,7 +6,6 @@ public record PontosRequestDTO(
     Integer idCidade,
     String nome,
     String endereco,
-    String periodo,
     BigDecimal latitude,
     BigDecimal longitude
 ){}
