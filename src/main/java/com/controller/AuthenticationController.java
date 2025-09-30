@@ -50,15 +50,17 @@ public class AuthenticationController implements com.controller.docs.Authenticat
                 ? user.getRole().getNome().trim().toUpperCase()
                 : "COLABORADOR";
 
-        var homePath = switch (role) {
-            case "GESTOR" -> "/gestor";
-            case "LIDER"  -> "/lider";
-            default       -> "/colab";
-        };
-
         var authMode = body.username().contains("@") ? "email" : "matricula";
         var token = tokenService.generateToken(user, authMode);
 
-        return ResponseEntity.ok(new LoginResponseDTO(token, user.getEmail(), role, homePath));
+        return ResponseEntity.ok(
+                new LoginResponseDTO(
+                        user.getIdColaborador(),
+                        user.getNome(),
+                        token,
+                        user.getEmail(),
+                        role
+                )
+        );
     }
 }
