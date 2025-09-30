@@ -9,7 +9,7 @@ import java.util.List;
 public interface RotaService {
     List<Rota> listar();
     Rota buscar (Integer id);
-    Rota  criar(RotaRequestDTO dto);
+    Rota criar(RotaRequestDTO dto);
     Rota atualizar(Integer idRota, RotaRequestDTO dto);
     Rota patch(Integer idRota, RotaPatchDTO dto);
     void deletar(Integer idRota);
