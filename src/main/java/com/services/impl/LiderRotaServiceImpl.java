@@ -1,7 +1,11 @@
 package com.services.impl;
 
 import com.dto.liderRota.LiderRotaResponse;
-import com.repositories.RoleRepository;
+import com.domain.user.LiderRota.LiderRotaId;
+import com.domain.user.LiderRota.RotaLider;
+import com.exceptions.RegraNegocioException;
+import com.repositories.Rota.RotaColaboradorRepository;
+import com.repositories.Rota.RotaPontoRepository;
 import com.repositories.Rota.RotaRepository;
 import com.repositories.UserRepository;
 import com.repositories.liderRota.LiderRotaRepository;
@@ -23,7 +27,9 @@ public class LiderRotaServiceImpl implements LiderRotaService {
     private final LiderRotaRepository liderRotaRepo;
     private final RotaRepository rotaRepo;
     private final UserRepository userRepo;
-    private final RoleRepository roleRepo;
+    private final com.repositories.RoleRepository roleRepo;
+    private final RotaColaboradorRepository rotaColabRepo;
+    private final RotaPontoRepository rotaPontoRepo;
 
     @Transactional
     @Override
@@ -34,14 +40,49 @@ public class LiderRotaServiceImpl implements LiderRotaService {
         var user = userRepo.findById(idColaborador)
                 .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
 
-        liderRotaRepo.addLider(idRota, idColaborador);
+        var rc = rotaColabRepo.findById_IdRotaAndId_IdColaborador(idRota, idColaborador)
+                .orElseThrow(() -> new RegraNegocioException("Colaborador não está atribuído a esta rota."));
+
+        if (rc.getPontos() == null) {
+            throw new RegraNegocioException("Para ser líder, o colaborador precisa ter um ponto definido na rota.");
+        }
+
+        Integer idPonto = rc.getPontos().getIdPonto();
+        boolean ePrimeiro = rotaPontoRepo
+                .existsByRota_IdRotaAndPonto_IdPontoAndOrdem(idRota, idPonto, 1);
+        if (!ePrimeiro) {
+            throw new RegraNegocioException("Apenas colaboradores no ponto de ORDEM 1 podem ser líderes dessa rota.");
+        }
+
+        var existenteOpt = liderRotaRepo.findByRota_IdRotaAndColaborador_IdColaborador(idRota, idColaborador);
+        LocalDateTime quando;
+
+        if (existenteOpt.isPresent()) {
+            var existente = existenteOpt.get();
+            if (!existente.isAtivo()) {
+                existente.setAtivo(true);
+                existente.setDataInativacao(null);
+                if (existente.getDataAtribuicao() == null) {
+                    existente.setDataAtribuicao(LocalDateTime.now());
+                }
+            }
+            quando = existente.getDataAtribuicao();
+        } else {
+            var novo = new RotaLider();
+            novo.setId(new LiderRotaId(idColaborador, idRota));
+            novo.setRota(rota);
+            novo.setColaborador(user);
+            novo.setAtivo(true);
+            novo.setDataAtribuicao(LocalDateTime.now());
+            novo.setDataInativacao(null);
+            liderRotaRepo.save(novo);
+            quando = novo.getDataAtribuicao();
+        }
 
         var roleLider = roleRepo.findByNome("LIDER")
                 .orElseThrow(() -> new NoSuchElementException("Role LIDER não encontrada"));
         user.setRole(roleLider);
         userRepo.save(user);
-
-        LocalDateTime quando = liderRotaRepo.findDataAtribuicao(idRota, idColaborador);
 
         return new LiderRotaResponse(
                 rota.getIdRota(),
@@ -57,19 +98,16 @@ public class LiderRotaServiceImpl implements LiderRotaService {
         var rota = rotaRepo.findById(idRota)
                 .orElseThrow(() -> new NoSuchElementException("Rota não encontrada"));
 
-        var ids = liderRotaRepo.findLideresDaRota(idRota); // apenas ATIVOS
-        List<LiderRotaResponse> resp = new ArrayList<>(ids.size());
+        var ativos = liderRotaRepo.findByRota_IdRotaAndAtivoTrue(idRota);
+        var resp = new ArrayList<LiderRotaResponse>(ativos.size());
 
-        for (UUID idColab : ids) {
-            var user = userRepo.findById(idColab)
-                    .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado: " + idColab));
-
-            var quando = liderRotaRepo.findDataAtribuicao(idRota, idColab);
+        for (var lr : ativos) {
+            var user = lr.getColaborador();
             resp.add(new LiderRotaResponse(
                     rota.getIdRota(),
                     user.getIdColaborador(),
                     user.getNome(),
-                    quando
+                    lr.getDataAtribuicao()
             ));
         }
         return resp;
@@ -78,9 +116,14 @@ public class LiderRotaServiceImpl implements LiderRotaService {
     @Transactional
     @Override
     public void remover(Integer idRota, UUID idColaborador) {
-        liderRotaRepo.inativarLider(idRota, idColaborador);
+        var lr = liderRotaRepo.findByRota_IdRotaAndColaborador_IdColaborador(idRota, idColaborador)
+                .orElseThrow(() -> new NoSuchElementException("Liderança não encontrada"));
 
-        boolean aindaLider = liderRotaRepo.isLiderEmAlgumaRota(idColaborador);
+        if (lr.isAtivo()) {
+            lr.setAtivo(false);
+            lr.setDataInativacao(LocalDateTime.now());
+        }
+        boolean aindaLider = liderRotaRepo.existsByColaborador_IdColaboradorAndAtivoTrue(idColaborador);
         if (!aindaLider) {
             var user = userRepo.findById(idColaborador)
                     .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));

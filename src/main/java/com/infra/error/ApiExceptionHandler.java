@@ -1,6 +1,7 @@
 package com.infra.error;
 
 import com.exceptions.AuthLoginException;
+import com.exceptions.RegraNegocioException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -32,4 +33,16 @@ public class ApiExceptionHandler {
 
         return  ResponseEntity.status(status).body(pd);
     }
+
+    @ExceptionHandler(RegraNegocioException.class)
+    public ResponseEntity<?> handleRegra(RegraNegocioException ex, HttpServletRequest req) {
+        var pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        pd.setTitle("Regra de negócio violada");
+        pd.setProperty("code", ex.getCode());
+        pd.setProperty("path", req.getRequestURI());
+        pd.setProperty("method", req.getMethod());
+        return ResponseEntity.unprocessableEntity().body(pd);
+    }
+    private record ErrorResponse(String code, String message) {}
 }
+

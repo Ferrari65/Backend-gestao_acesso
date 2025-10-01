@@ -14,7 +14,17 @@ public class RotaColaboradorId  implements Serializable {
 
     public RotaColaboradorId(){}
     public RotaColaboradorId(UUID idColaborador, Integer idRota){
+        this.idColaborador = idColaborador;
+        this.idRota = idRota;
     }
+
+    public UUID getIdColaborador() { return idColaborador; }
+    public void setIdColaborador(UUID idColaborador) { this.idColaborador = idColaborador; }
+
+
+    public Integer getIdRota(){return idRota;}
+    public  void setIdRota (Integer idRota) {this.idRota = idRota; }
+
 
     @Override
     public boolean equals(Object o){

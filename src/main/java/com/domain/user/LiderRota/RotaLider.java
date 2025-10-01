@@ -3,11 +3,15 @@ package com.domain.user.LiderRota;
 import com.domain.user.Rotas.Rota;
 import com.domain.user.colaborador.User;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "lider_rota")
+@Getter
+@Setter
 public class RotaLider {
 
     @EmbeddedId
@@ -33,12 +37,8 @@ public class RotaLider {
     private LocalDateTime dataInativacao;
 
     @PrePersist
-    public void prePersist() {
-        if (dataAtribuicao == null) {
-            dataAtribuicao = LocalDateTime.now();
-        }
-        if (dataInativacao != null) {
-            ativo = false;
-        }
+    public void prePersist() {if (dataAtribuicao == null) {dataAtribuicao = LocalDateTime.now();}
+        if (dataInativacao != null) {ativo = false;}
     }
+
 }
