@@ -35,13 +35,14 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler(RegraNegocioException.class)
-    public ResponseEntity<?> handleRegra(RegraNegocioException ex, HttpServletRequest req) {
-        var pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+    public ResponseEntity<ProblemDetail> handleRegra(RegraNegocioException ex, HttpServletRequest req) {
+        HttpStatus status = ex.getCode().equals("COLABORADOR_JA_ATRIBUIDO")
+                ? HttpStatus.CONFLICT : HttpStatus.UNPROCESSABLE_ENTITY;
+        var pd = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
         pd.setTitle("Regra de negócio violada");
         pd.setProperty("code", ex.getCode());
         pd.setProperty("path", req.getRequestURI());
-        pd.setProperty("method", req.getMethod());
-        return ResponseEntity.unprocessableEntity().body(pd);
+        return ResponseEntity.status(status).body(pd);
     }
     private record ErrorResponse(String code, String message) {}
 }

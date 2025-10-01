@@ -12,9 +12,9 @@ import java.util.Optional;
 
 public interface RotaPontoRepository extends JpaRepository<RotaPonto, RotaPontoId> {
 
+    boolean existsByRota_IdRotaAndPonto_IdPontoAndOrdem(Integer idRota, Integer idPonto, Integer ordem);
     List<RotaPonto> findByRota_IdRotaOrderByOrdemAsc(Integer idRota);
     Optional<RotaPonto> findFirstByRota_IdRotaOrderByOrdemAsc(Integer idRota);
-    boolean existsByRota_IdRotaAndPonto_IdPontoAndOrdem(Integer idRota, Integer idPonto, Integer ordem);
 
     boolean existsByRota_IdRota(Integer idRota);
     @Query("""

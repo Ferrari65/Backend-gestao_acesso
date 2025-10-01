@@ -3,6 +3,7 @@ package com.services.colaborador;
 import com.dto.colaborador.RotaColaboradorResponse;
 import com.domain.user.Rotas.RotaColaborador;
 import com.domain.user.Rotas.RotaColaboradorId;
+import com.exceptions.RegraNegocioException;
 import com.repositories.Rota.RotaColaboradorRepository;
 import com.repositories.Rota.RotaRepository;
 import com.repositories.UserRepository;
@@ -31,12 +32,24 @@ public class RotaColaboradorService {
         var user = userRepo.findById(idColaborador)
                 .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
 
+        Boolean ativo = (user.getAtivo());
+        if (ativo == null || !ativo) {
+            throw new RegraNegocioException("COLABORADOR_INATIVO", "Colaborador precisa estar ativo.");
+        }
+
+        boolean jaEmOutraRota = rotaColabRepo
+                .existsByColaborador_IdColaboradorAndId_IdRotaNot(idColaborador, idRota);
+        if (jaEmOutraRota) {
+            throw new RegraNegocioException("COLABORADOR_JA_ATRIBUIDO",
+                    "Colaborador já está atribuído a outra rota.");
+        }
+
         var existente = rotaColabRepo.findById_IdRotaAndId_IdColaborador(idRota, idColaborador).orElse(null);
         if (existente != null) {
             if (idPonto != null) {
                 var ponto = pontosRepo.findById(idPonto)
                         .orElseThrow(() -> new NoSuchElementException("Ponto não encontrado"));
-                existente.setPontos(ponto); // JPA dirty checking
+                existente.setPontos(ponto); // dirty checking
             }
             return new RotaColaboradorResponse(
                     idRota, idColaborador, user.getNome(),

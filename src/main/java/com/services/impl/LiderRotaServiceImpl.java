@@ -48,6 +48,7 @@ public class LiderRotaServiceImpl implements LiderRotaService {
         }
 
         Integer idPonto = rc.getPontos().getIdPonto();
+
         boolean ePrimeiro = rotaPontoRepo
                 .existsByRota_IdRotaAndPonto_IdPontoAndOrdem(idRota, idPonto, 1);
         if (!ePrimeiro) {

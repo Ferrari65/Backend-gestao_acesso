@@ -10,8 +10,10 @@ import java.util.UUID;
 
 public interface RotaColaboradorRepository extends JpaRepository<RotaColaborador, RotaColaboradorId> {
 
-    boolean existsByColaborador_IdColaboradorAndRota_IdRota(UUID idColaborador, Integer idRota);
+
     Optional<RotaColaborador> findById_IdRotaAndId_IdColaborador(Integer idRota, UUID idColaborador);
+    boolean existsByColaborador_IdColaboradorAndId_IdRotaNot(UUID idColaborador, Integer idRota);
+    boolean existsByColaborador_IdColaboradorAndRota_IdRota(UUID idColaborador, Integer idRota);
     void deleteById_IdRotaAndId_IdColaborador(Integer idRota, UUID idColaborador);
     List<RotaColaborador> findByRota_IdRota(Integer idRota);
     List<RotaColaborador> findByColaborador_IdColaborador(UUID idColaborador);

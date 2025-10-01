@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rotas/{idRota}/colaboradores")
-@Tag(name = "Rotas - Colaboradores")
+@Tag(name = "Rotas - Colaboradores", description = "Endpoints para Gerenciamento e atribuição de Rota Colaborador")
 @SecurityRequirement(name = "bearerAuth")
 public class RotaColaboradorController {
 
@@ -24,7 +24,7 @@ public class RotaColaboradorController {
 
     @PutMapping("/{idColaborador}")
     @PreAuthorize("hasRole('GESTOR')")
-    @Operation(summary = "Atribuir colaborador à rota (idempotente). Pode definir/atualizar idPonto.")
+    @Operation(summary = "Atribuir colaborador à rota")
     public ResponseEntity<RotaColaboradorResponse> atribuir(
             @PathVariable Integer idRota,
             @PathVariable UUID idColaborador,
@@ -44,7 +44,7 @@ public class RotaColaboradorController {
 
     @DeleteMapping("/{idColaborador}")
     @PreAuthorize("hasRole('GESTOR')")
-    @Operation(summary = "Remover colaborador da rota (idempotente)")
+    @Operation(summary = "Remover colaborador da rota")
     public ResponseEntity<Void> remover(
             @PathVariable Integer idRota,
             @PathVariable UUID idColaborador
