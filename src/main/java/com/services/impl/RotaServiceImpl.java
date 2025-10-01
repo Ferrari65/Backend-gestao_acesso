@@ -45,6 +45,7 @@ public class RotaServiceImpl implements RotaService {
                 .orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
     }
 
+
     @Transactional
     public Rota criar(RotaRequestDTO dto) {
         var cidade = cidadeRepo.findById(dto.idCidade())

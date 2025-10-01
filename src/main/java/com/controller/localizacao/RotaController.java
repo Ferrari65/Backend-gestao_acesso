@@ -2,6 +2,7 @@ package com.controller.localizacao;
 
 import com.dto.PATCH.RotaPatchDTO;
 import com.dto.localizacao.Rota.RotaDTO;
+import com.dto.localizacao.Rota.RotaListDTO;
 import com.dto.localizacao.Rota.RotaPontoItemDTO;
 import com.dto.localizacao.Rota.RotaRequestDTO;
 import com.services.impl.RotaServiceImpl;
@@ -28,16 +29,16 @@ public class RotaController implements com.controller.docs.RotaControllerDocs {
 
     @GetMapping
     @Override
-    public ResponseEntity<List<RotaDTO>> listar() {
-        var list = service.listar().stream().map(RotaDTO::from).toList();
+    public ResponseEntity<List<RotaListDTO>> listar() {
+        var list = service.listar().stream().map(RotaListDTO::from).toList();
         return list.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(list);
     }
 
-    @GetMapping("/{id}")
-    @Override
-    public ResponseEntity<RotaDTO> buscar(@Parameter(description = "ID da rota a ser buscada.", example = "1") @PathVariable Integer id) {
-        return ResponseEntity.ok(RotaDTO.from(service.buscar(id)));
-    }
+//    @GetMapping("/{id}")
+//    @Override
+//    public ResponseEntity<RotaDTO> buscar(@Parameter(description = "ID da rota a ser buscada.", example = "1") @PathVariable Integer id) {
+//        return ResponseEntity.ok(RotaDTO.from(service.buscar(id)));
+//    }
 
     @PostMapping
     @PreAuthorize("hasRole('GESTOR')")
@@ -77,7 +78,7 @@ public class RotaController implements com.controller.docs.RotaControllerDocs {
     }
 
     @GetMapping("/{idRota}/trajeto")
-    @PreAuthorize("hasAnyRole('COLABORADOR','LIDER')")
+    @PreAuthorize("hasAnyRole('COLABORADOR','LIDER','GESTOR')")
     @Override
     public ResponseEntity<List<RotaPontoItemDTO>> trajeto(@PathVariable Integer idRota) {
         var dto = service.listarTrajeto(idRota);

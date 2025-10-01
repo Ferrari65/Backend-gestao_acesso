@@ -16,7 +16,7 @@ public class TrackPassGestaoDeAcessoApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TrackPassGestaoDeAcessoApplication.class, args);
-		System.out.println("Aplicação iniciada com sucesso! isso e um teste");
+		System.out.println("Aplicação iniciada com sucesso!");
 	}
 
 }

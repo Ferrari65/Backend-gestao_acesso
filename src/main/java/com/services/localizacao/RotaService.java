@@ -7,6 +7,7 @@ import com.dto.localizacao.Rota.RotaRequestDTO;
 import java.util.List;
 
 public interface RotaService {
+
     List<Rota> listar();
     Rota buscar (Integer id);
     Rota criar(RotaRequestDTO dto);

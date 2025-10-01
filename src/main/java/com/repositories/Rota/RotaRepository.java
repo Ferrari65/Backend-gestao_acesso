@@ -18,7 +18,7 @@ public interface RotaRepository extends JpaRepository<Rota, Integer> {
     boolean existsByCidade_IdCidadeAndNomeIgnoreCaseAndPeriodoAndIdRotaNot(
             Integer idCidade, String nome, Periodo periodo, Integer idRota);
 
-    @EntityGraph(attributePaths = {"cidade", "pontos", "pontos.ponto"})
+    @EntityGraph(attributePaths = {"cidade"})
     List<Rota> findAll();
 
     @EntityGraph(attributePaths = {"cidade", "pontos", "pontos.ponto"})

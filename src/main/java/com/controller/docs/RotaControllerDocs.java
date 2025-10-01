@@ -2,6 +2,7 @@ package com.controller.docs;
 
 import com.dto.PATCH.RotaPatchDTO;
 import com.dto.localizacao.Rota.RotaDTO;
+import com.dto.localizacao.Rota.RotaListDTO;
 import com.dto.localizacao.Rota.RotaPontoItemDTO;
 import com.dto.localizacao.Rota.RotaRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,27 +41,27 @@ public interface RotaControllerDocs {
                     @ApiResponse(description = "Não autorizado. O usuário não tem permissão para acessar este recurso.", responseCode = "403", content = @Content),
                     @ApiResponse(description = "Erro interno do servidor.", responseCode = "500", content = @Content)
             })
-    ResponseEntity<List<RotaDTO>> listar();
+    ResponseEntity<List<RotaListDTO>> listar();
 
-    @Operation(
-            summary = "Buscar rota por ID",
-            description = "Busca e retorna os detalhes de uma rota específica pelo seu ID.",
-            responses = {
-                    @ApiResponse(
-                            description = "Rota encontrada e retornada com sucesso.",
-                            responseCode = "200",
-                            content = {
-                                    @Content(
-                                            mediaType = "application/json",
-                                            schema = @Schema(implementation = RotaDTO.class)
-                                    )
-                            }),
-                    @ApiResponse(description = "Requisição inválida (ID inválido).", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Autenticação necessária.", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Rota não encontrada.", responseCode = "404", content = @Content),
-                    @ApiResponse(description = "Erro interno do servidor.", responseCode = "500", content = @Content)
-            })
-    ResponseEntity<RotaDTO> buscar(@Parameter(description = "ID da rota a ser buscada.", example = "1") @PathVariable Integer id);
+//    @Operation(
+//            summary = "Buscar rota por ID",
+//            description = "Busca e retorna os detalhes de uma rota específica pelo seu ID.",
+//            responses = {
+//                    @ApiResponse(
+//                            description = "Rota encontrada e retornada com sucesso.",
+//                            responseCode = "200",
+//                            content = {
+//                                    @Content(
+//                                            mediaType = "application/json",
+//                                            schema = @Schema(implementation = RotaDTO.class)
+//                                    )
+//                            }),
+//                    @ApiResponse(description = "Requisição inválida (ID inválido).", responseCode = "400", content = @Content),
+//                    @ApiResponse(description = "Autenticação necessária.", responseCode = "401", content = @Content),
+//                    @ApiResponse(description = "Rota não encontrada.", responseCode = "404", content = @Content),
+//                    @ApiResponse(description = "Erro interno do servidor.", responseCode = "500", content = @Content)
+//            })
+//    ResponseEntity<RotaDTO> buscar(@Parameter(description = "ID da rota a ser buscada.", example = "1") @PathVariable Integer id);
 
     @Operation(
             summary = "Criar nova rota",
