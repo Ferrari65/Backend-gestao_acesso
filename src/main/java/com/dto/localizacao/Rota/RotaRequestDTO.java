@@ -16,9 +16,9 @@ public record RotaRequestDTO (
     Integer capacidade,
     Boolean ativo,
 
-    @JsonFormat(pattern = "HH:mm:ss")
+    @JsonFormat(pattern = "HH:mm")
     LocalTime horaPartida,
-    @JsonFormat(pattern = "HH:mm:ss")
+    @JsonFormat(pattern = "HH:mm")
     LocalTime horaChegada,
 
     @Valid
