@@ -19,7 +19,7 @@ public interface RotaPontoRepository extends JpaRepository<RotaPonto, RotaPontoI
     boolean existsByRota_IdRota(Integer idRota);
     @Query("""
            select new com.dto.localizacao.Rota.RotaPontoItemDTO(
-             rp.ordem, p.idPonto, p.nome, p.latitude, p.longitude)
+             rp.ordem, p.idPonto, p.nome, p.endereco, p.latitude, p.longitude)
            from RotaPonto rp join rp.ponto p
            where rp.rota.idRota = :idRota
            order by rp.ordem asc

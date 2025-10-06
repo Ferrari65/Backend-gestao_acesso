@@ -26,6 +26,7 @@ public record RotaDTO (
                         rp.getOrdem(),
                         rp.getPonto().getIdPonto(),
                         rp.getPonto().getNome(),
+                        rp.getPonto().getEndereco(),
                         rp.getPonto().getLatitude(),
                         rp.getPonto().getLongitude()
                 ))

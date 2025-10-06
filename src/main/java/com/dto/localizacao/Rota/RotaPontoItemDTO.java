@@ -7,5 +7,6 @@ public record RotaPontoItemDTO (
         Integer ordem,
         Integer idPonto,
         String nomePonto,
+        String endereco,
         BigDecimal latitude,
         BigDecimal  longitude) {}

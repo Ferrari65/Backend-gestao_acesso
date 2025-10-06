@@ -3,6 +3,7 @@ package com.domain.user.Rotas;
 import com.domain.user.Enum.Periodo;
 import com.domain.user.endereco.Cidade;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -28,8 +29,8 @@ public class Rota {
 
     private String nome;
 
+    @NotNull(message = "O período é obrigatório")
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private Periodo periodo;
 
     private Integer capacidade;

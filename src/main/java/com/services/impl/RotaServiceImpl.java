@@ -2,7 +2,6 @@ package com.services.impl;
 
 import com.domain.user.Rotas.Rota;
 import com.domain.user.Rotas.RotaPonto;
-import com.domain.user.Rotas.RotaPontoId;
 import com.domain.user.endereco.Pontos;
 import com.dto.PATCH.RotaPatchDTO;
 import com.dto.localizacao.Rota.RotaPontoItemDTO;
@@ -19,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -33,19 +33,19 @@ public class RotaServiceImpl implements RotaService {
     private final PontosRepository pontoRepo;
     private final RotaPontoRepository rotaPontoRepo;
 
-    private static final DateTimeFormatter HHMMSS = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-
+    @Override
     public List<Rota> listar() {
         return rotaRepo.findAll();
     }
 
+    @Override
     public Rota buscar(Integer id) {
         return rotaRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
     }
 
-
+    @Override
     @Transactional
     public Rota criar(RotaRequestDTO dto) {
         var cidade = cidadeRepo.findById(dto.idCidade())
@@ -70,12 +70,12 @@ public class RotaServiceImpl implements RotaService {
         rota.setHoraPartida(dto.horaPartida());
         rota.setHoraChegada(dto.horaChegada());
 
-        rota.getPontos().clear();
-        rota.getPontos().addAll(montarSequencia(rota, dto.pontos(), mapaPontos));
+        aplicarSequenciaInPlace(rota, dto.pontos(), mapaPontos);
 
         return rotaRepo.save(rota);
     }
 
+    @Override
     @Transactional
     public Rota atualizar(Integer idRota, RotaRequestDTO dto) {
         var rota = rotaRepo.findById(idRota)
@@ -102,78 +102,79 @@ public class RotaServiceImpl implements RotaService {
         rota.setHoraPartida(dto.horaPartida());
         rota.setHoraChegada(dto.horaChegada());
 
-        rota.getPontos().clear();
-        rota.getPontos().addAll(montarSequencia(rota, dto.pontos(), mapaPontos));
+        aplicarSequenciaInPlace(rota, dto.pontos(), mapaPontos);
 
         return rotaRepo.save(rota);
     }
 
+    @Override
     @Transactional
     public Rota patch(Integer idRota, RotaPatchDTO dto) {
         var rota = rotaRepo.findById(idRota)
                 .orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
 
-        boolean mudouCidade = false, mudouNome = false, mudouPeriodo = false;
-
         if (dto.idCidade() != null) {
             var cidade = cidadeRepo.findById(dto.idCidade())
                     .orElseThrow(() -> new EntityNotFoundException("Cidade não encontrada"));
             rota.setCidade(cidade);
-            mudouCidade = true;
         }
-        if (dto.nome() != null) {
-            rota.setNome(dto.nome().trim().toUpperCase());
-            mudouNome = true;
-        }
-        if (dto.periodo() != null) {
-            rota.setPeriodo(dto.periodo());
-            mudouPeriodo = true;
-        }
+        if (dto.nome() != null) rota.setNome(dto.nome().trim().toUpperCase());
+        if (dto.periodo() != null) rota.setPeriodo(dto.periodo());
         if (dto.capacidade() != null) {
             if (dto.capacidade() < 0) throw new IllegalArgumentException("Capacidade não pode ser negativa");
             rota.setCapacidade(dto.capacidade());
         }
         if (dto.ativo() != null) rota.setAtivo(dto.ativo());
 
-        if (dto.horaPartida() != null && !"string".equalsIgnoreCase(dto.horaPartida())) {
-            rota.setHoraPartida(LocalTime.parse(dto.horaPartida(), HHMMSS));
-        }
-        if (dto.horaChegada() != null && !"string".equalsIgnoreCase(dto.horaChegada())) {
-            rota.setHoraChegada(LocalTime.parse(dto.horaChegada(), HHMMSS));
-        }
+        if (dto.horaPartida() != null) rota.setHoraPartida(toLocalTime(dto.horaPartida()));
+        if (dto.horaChegada() != null) rota.setHoraChegada(toLocalTime(dto.horaChegada()));
 
         if (dto.pontos() != null) {
             validarOrdemUnica(dto.pontos());
-            var mapaPontos = carregarEValidarPontos(rota.getCidade().getIdCidade(), dto.pontos());
-            rota.getPontos().clear();
-            rota.getPontos().addAll(montarSequencia(rota, dto.pontos(), mapaPontos));
+            var idCidade = rota.getCidade().getIdCidade();
+            var mapaPontos = carregarEValidarPontos(idCidade, dto.pontos());
+            aplicarSequenciaInPlace(rota, dto.pontos(), mapaPontos);
         }
 
-        if (mudouNome || mudouPeriodo || mudouCidade) {
-            boolean conflito = rotaRepo.existsByCidade_IdCidadeAndNomeIgnoreCaseAndPeriodoAndIdRotaNot(
-                    rota.getCidade().getIdCidade(), rota.getNome(), rota.getPeriodo(), rota.getIdRota());
-            if (conflito) throw conflito("Já existe uma rota com este nome e período nesta cidade");
-        }
+        boolean conflito = rotaRepo.existsByCidade_IdCidadeAndNomeIgnoreCaseAndPeriodoAndIdRotaNot(
+                rota.getCidade().getIdCidade(), rota.getNome(), rota.getPeriodo(), rota.getIdRota());
+        if (conflito) throw conflito("Já existe uma rota com este nome e período nesta cidade");
 
         return rotaRepo.save(rota);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void deletar(Integer idRota) {
         var rota = rotaRepo.findById(idRota)
                 .orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
         rotaRepo.delete(rota);
     }
 
+    @Transactional(readOnly = true)
+    public List<RotaPontoItemDTO> listarTrajeto(Integer idRota){
+        rotaRepo.findById(idRota).orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
+        return rotaPontoRepo.listarPontosDTO(idRota);
+    }
+
+
     private void validarOrdemUnica(List<RotaPontoItemRequestDTO> itens) {
         var set = new HashSet<Integer>();
         for (var it : itens) {
-            if (it.ordem() == null || it.ordem() <= 0)
+            if (it.ordem() == null || it.ordem() <= 0) {
                 throw new IllegalArgumentException("A ordem de cada ponto deve ser > 0");
-            if (!set.add(it.ordem()))
+            }
+            if (!set.add(it.ordem())) {
                 throw new IllegalArgumentException("Há ordens repetidas na sequência de pontos");
+            }
         }
+    }
+
+    private static final DateTimeFormatter FMT_HH_MM    = DateTimeFormatter.ofPattern("HH:mm");
+
+    private LocalTime toLocalTime(String valor) {
+        return LocalTime.parse(valor, FMT_HH_MM);
+
     }
 
     private Map<Integer, Pontos> carregarEValidarPontos(Integer idCidade, List<RotaPontoItemRequestDTO> itens) {
@@ -190,24 +191,34 @@ public class RotaServiceImpl implements RotaService {
         return pontos.stream().collect(Collectors.toMap(Pontos::getIdPonto, p -> p));
     }
 
-    private List<RotaPonto> montarSequencia(Rota rota, List<RotaPontoItemRequestDTO> itens, Map<Integer, Pontos> mapaPontos) {
-        return itens.stream()
-                .sorted(Comparator.comparingInt(RotaPontoItemRequestDTO::ordem))
-                .map(it -> {
-                    var rp = new RotaPonto();
-                    rp.setId(new RotaPontoId());
-                    rp.setRota(rota);
-                    rp.setPonto(mapaPontos.get(it.idPonto()));
-                    rp.setOrdem(it.ordem());
-                    return rp;
-                })
-                .toList();
-    }
+    private void aplicarSequenciaInPlace(Rota rota, List<RotaPontoItemRequestDTO> itens, Map<Integer, Pontos> mapaPontos) {
+        Map<Integer, RotaPonto> existentes = rota.getPontos().stream()
+                .collect(Collectors.toMap(rp -> rp.getPonto().getIdPonto(), rp -> rp));
 
-    @Transactional(readOnly = true)
-    public List<RotaPontoItemDTO> listarTrajeto(Integer idRota){
-    rotaRepo.findById(idRota).orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
-    return rotaPontoRepo.listarPontosDTO(idRota);
+        var itensOrdenados = itens.stream()
+                .sorted(Comparator.comparingInt(RotaPontoItemRequestDTO::ordem))
+                .toList();
+
+        Set<Integer> manter = new HashSet<>();
+
+        for (var it : itensOrdenados) {
+            Integer idPonto = it.idPonto();
+            Pontos ponto = mapaPontos.get(idPonto);
+
+            RotaPonto rp = existentes.get(idPonto);
+            if (rp == null) {
+                rp = new RotaPonto();
+                rp.setRota(rota);
+                rp.setPonto(ponto);
+                rp.setOrdem(it.ordem());
+                rota.getPontos().add(rp);
+            } else {
+                rp.setOrdem(it.ordem());
+            }
+            manter.add(idPonto);
+        }
+
+        rota.getPontos().removeIf(rp -> !manter.contains(rp.getPonto().getIdPonto()));
     }
 
     private RuntimeException conflito(String msg) {

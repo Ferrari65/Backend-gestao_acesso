@@ -13,7 +13,7 @@ import lombok.Setter;
 public class RotaPonto {
 
     @EmbeddedId
-    private RotaPontoId id;
+    private RotaPontoId id = new RotaPontoId();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId("idRota")
@@ -27,4 +27,6 @@ public class RotaPonto {
 
     @Column(nullable = false)
     private Integer ordem;
+
+    private String endereco;
 }
