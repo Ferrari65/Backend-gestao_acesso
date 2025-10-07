@@ -28,5 +28,4 @@ public class RotaPonto {
     @Column(nullable = false)
     private Integer ordem;
 
-    private String endereco;
 }
