@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface LiderRotaRepository extends JpaRepository<RotaLider, LiderRotaId> {
 
     List<RotaLider> findByRota_IdRotaAndAtivoTrue(Integer idRota);
+
     Optional<RotaLider> findByRota_IdRotaAndColaborador_IdColaborador(Integer idRota, UUID idColaborador);
     boolean existsByColaborador_IdColaboradorAndAtivoTrue(UUID idColaborador);
-}
+    boolean existsByRota_IdRotaAndColaborador_IdColaboradorAndAtivoTrue(Integer idRota, UUID idColaborador);}

@@ -34,11 +34,12 @@ public class RotaController implements com.controller.docs.RotaControllerDocs {
         return list.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(list);
     }
 
-//    @GetMapping("/{id}")
-//    @Override
-//    public ResponseEntity<RotaDTO> buscar(@Parameter(description = "ID da rota a ser buscada.", example = "1") @PathVariable Integer id) {
-//        return ResponseEntity.ok(RotaDTO.from(service.buscar(id)));
-//    }
+
+    @GetMapping("/{id}")
+    @Override
+    public ResponseEntity<RotaDTO> buscar(@Parameter(description = "ID da rota a ser buscada.", example = "1") @PathVariable Integer id) {
+        return ResponseEntity.ok(RotaDTO.from(service.buscar(id)));
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('GESTOR')")

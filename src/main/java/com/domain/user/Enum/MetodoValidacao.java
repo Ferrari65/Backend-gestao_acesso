@@ -1,5 +1,3 @@
 package com.domain.user.Enum;
 
-public enum MetodoValidacao {
-    QR, MANUAL;
-}
+public enum MetodoValidacao {COD_BARRA, MANUAL; }
