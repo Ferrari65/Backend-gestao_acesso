@@ -9,6 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,5 +58,15 @@ public class Rota {
     }
     public void setPeriodo(Periodo periodo) {
         this.periodo = (periodo != null) ? Periodo.valueOf(periodo.name().toUpperCase()) : null;
+    }
+
+    @PrePersist @PreUpdate
+    private void ajustarHoraParaMinutos() {
+        if (horaPartida != null) {
+            horaPartida = horaPartida.truncatedTo(ChronoUnit.MINUTES);
+        }
+        if (horaChegada != null) {
+            horaChegada = horaChegada.truncatedTo(ChronoUnit.MINUTES);
+        }
     }
 }
