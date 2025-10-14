@@ -28,6 +28,7 @@ public class User implements UserDetails {
     @Id
     @Column(name = "id_colaborador")
     private UUID idColaborador;
+    public UUID getId() { return idColaborador; }
 
     @ManyToOne
     @JoinColumn(name = "id_role", nullable = false)

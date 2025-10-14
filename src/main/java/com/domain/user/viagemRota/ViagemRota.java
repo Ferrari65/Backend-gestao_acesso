@@ -1,4 +1,4 @@
-package com.domain.user;
+package com.domain.user.viagemRota;
 
 import com.domain.user.Enum.TipoViagem;
 import jakarta.persistence.*;

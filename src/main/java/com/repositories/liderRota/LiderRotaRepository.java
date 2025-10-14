@@ -14,4 +14,5 @@ public interface LiderRotaRepository extends JpaRepository<RotaLider, LiderRotaI
 
     Optional<RotaLider> findByRota_IdRotaAndColaborador_IdColaborador(Integer idRota, UUID idColaborador);
     boolean existsByColaborador_IdColaboradorAndAtivoTrue(UUID idColaborador);
-    boolean existsByRota_IdRotaAndColaborador_IdColaboradorAndAtivoTrue(Integer idRota, UUID idColaborador);}
+    boolean existsByRota_IdRotaAndColaborador_IdColaboradorAndAtivoTrue(Integer idRota, UUID idColaborador);
+}

@@ -2,7 +2,8 @@ package com.domain.user.registroEmbarque;
 
 import com.domain.user.Enum.MetodoValidacao;
 import com.domain.user.Enum.StatusEmbarque;
-import com.domain.user.ViagemRota;
+import com.domain.user.viagemRota.ViagemRota;
+import com.domain.user.colaborador.ColaboradorForm;
 import com.domain.user.colaborador.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -53,8 +54,9 @@ public class RegistroEmbarque {
     @Column(name = "tem_aviso_previo", nullable = false)
     private Boolean temAvisoPrevio = false;
 
-    @Column(name = "id_aviso_previo")
-    private UUID idAvisoPrevio;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_aviso_previo")
+    private ColaboradorForm avisoPrevio;
 
     @CreationTimestamp
     @Column(name = "criado_em", updatable = false)

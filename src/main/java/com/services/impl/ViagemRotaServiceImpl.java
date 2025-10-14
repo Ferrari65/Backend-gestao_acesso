@@ -1,6 +1,6 @@
 package com.services.impl;
 
-import com.domain.user.ViagemRota;
+import com.domain.user.viagemRota.ViagemRota;
 import com.dto.localizacao.Viagem.ViagemRotaRequestDTO;
 import com.dto.localizacao.Viagem.ViagemRotaResponseDTO;
 import com.repositories.viagem.ViagemRepository;

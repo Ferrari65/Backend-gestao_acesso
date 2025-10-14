@@ -1,6 +1,6 @@
 package com.repositories.registroEmbarque;
 
-import com.domain.user.ViagemRota;
+import com.domain.user.viagemRota.ViagemRota;
 import com.domain.user.colaborador.User;
 import com.domain.user.registroEmbarque.RegistroEmbarque;
 import org.springframework.data.jpa.repository.JpaRepository;

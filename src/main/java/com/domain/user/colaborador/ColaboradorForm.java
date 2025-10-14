@@ -48,7 +48,13 @@ public class ColaboradorForm {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private StatusForm status = StatusForm.PENDENTE;
+    private StatusForm status = StatusForm.LIBERADO;
+
+    @Column(name = "utilizado", nullable = false)
+    private boolean utilizado = false;
+
+    @Column(name = "utilizado_em")
+    private OffsetDateTime utilizadoEm;
 
     @Column(name = "criado_em", nullable = false)
     private OffsetDateTime criadoEm;
@@ -56,6 +62,6 @@ public class ColaboradorForm {
     @PrePersist
     public void prePersist() {
         if (criadoEm == null) criadoEm = OffsetDateTime.now(ZoneOffset.UTC);
-        if (status == null) status = StatusForm.PENDENTE;
+        if (status == null) status = StatusForm.LIBERADO;
     }
 }

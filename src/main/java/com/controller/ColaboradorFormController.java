@@ -55,7 +55,7 @@ public class ColaboradorFormController implements com.controller.docs.Colaborado
                     in = ParameterIn.QUERY,
                     description = "Filtra a lista de formulários pelo status. Se omitido, todos os formulários do colaborador são retornados.",
                     schema = @Schema(implementation = StatusForm.class,
-                            description = "Os valores aceitos para o filtro de status são **ABERTO**, **APROVADO**, **REPROVADO**, **CANCELADO**.")
+                            description = "Os valores aceitos para o filtro de status são **PENDENTE**, **LIBERADO**, **REPROVADO**.")
             )
             @RequestParam(required = false) StatusForm status
     ) {
@@ -63,48 +63,6 @@ public class ColaboradorFormController implements com.controller.docs.Colaborado
         return service.listarTodosDoColaborador(colab.idColaborador(), status);
     }
 
-    @GetMapping
-    @PreAuthorize("hasAnyRole('GESTOR')")
-    @Override
-    public List<FormResponse> todos(
-            @Parameter(
-                    in = ParameterIn.QUERY,
-                    description = "Filtra a lista de formulários pelo status. Se omitido, todos os formulários são retornados.",
-                    schema = @Schema(implementation = StatusForm.class,
-                            description = "Os valores aceitos são **ABERTO**, **APROVADO**, **REPROVADO**, **CANCELADO**.")
-            )
-            @RequestParam(required = false) StatusForm status
-    ) {
-        return service.listarTodos(status);
-    }
-
-    @PatchMapping(path = "/{id}/status", consumes = "application/json")
-    @PreAuthorize("hasRole('GESTOR')")
-    @Override
-    public FormResponse atualizarStatus(
-            @Parameter(description = "ID único do formulário a ser atualizado.", required = true)
-            @PathVariable UUID id,
-
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    description = "O novo status desejado para o formulário. O corpo da requisição deve ser uma string JSON simples com um dos valores do enum.",
-                    content = @Content(
-                            schema = @Schema(
-                                    implementation = StatusForm.class,
-                                    description = "Valores de status aceitos: **ABERTO**, **APROVADO**, **REPROVADO**, **CANCELADO**."
-                            ),
-                            examples = {
-                                    @ExampleObject(name = "Aprovar", value = "\"APROVADO\""),
-                                    @ExampleObject(name = "Reprovar", value = "\"REPROVADO\""),
-                                    @ExampleObject(name = "Cancelar", value = "\"CANCELADO\"")
-                            }
-                    )
-            )
-            @RequestBody StatusForm novoStatus
-    ) {
-        UUID idUsuarioAcionador = resolveColaboradorDTO().idColaborador();
-        return service.atualizarStatus(id, novoStatus, idUsuarioAcionador);
-    }
 
     private ColaboradorDTO resolveColaboradorDTO() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

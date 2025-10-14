@@ -1,7 +1,7 @@
 package com.dto.localizacao.Viagem;
 
 import com.domain.user.Enum.TipoViagem;
-import com.domain.user.ViagemRota;
+import com.domain.user.viagemRota.ViagemRota;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -12,7 +12,7 @@ public record ViagemRotaResponseDTO(
         Integer idRota,
         Integer idMotorista,
         Integer idVeiculo,
-        LocalDate saidaPrecista,
+        LocalDate saidaPrevista,
         LocalDate chegadaPrevista,
         TipoViagem tipoViagem,
         boolean ativo,

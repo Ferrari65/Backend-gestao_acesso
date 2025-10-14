@@ -1,7 +1,6 @@
 package com.repositories.viagem;
 
-import com.domain.user.Enum.TipoViagem;
-import com.domain.user.ViagemRota;
+import com.domain.user.viagemRota.ViagemRota;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

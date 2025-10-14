@@ -11,13 +11,45 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ColaboradorFormRepository extends JpaRepository<ColaboradorForm, UUID> {
+
+    Optional<ColaboradorForm> findTopByIdColaboradorAndDataUsoAndIdRotaDestinoAndStatusInOrderByCriadoEmDesc(
+            UUID idColaborador,
+            LocalDate dataUso,
+            Integer idRotaDestino,
+            Collection<StatusForm> statuses
+    );
+
     Optional<ColaboradorForm> findFirstByIdColaboradorAndDataUsoAndIdRotaDestinoAndStatusIn(
             UUID idColaborador, LocalDate dataUso, Integer idRotaDestino, Collection<StatusForm> statuses
     );
 
+    Optional<ColaboradorForm> findTopByIdColaboradorAndIdRotaDestinoAndStatusInOrderByCriadoEmDesc(
+            UUID idColaborador,
+            Integer idRotaDestino,
+            Collection<StatusForm> statuses
+    );
+
+    Optional<ColaboradorForm> findTopByIdColaboradorAndDataUsoAndStatusInOrderByCriadoEmDesc(
+            UUID idColaborador,
+            LocalDate dataUso,
+            Collection<StatusForm> statuses
+    );
+
+    Optional<ColaboradorForm> findTopByIdColaboradorAndDataUsoAndIdRotaDestinoAndStatusInAndUtilizadoFalseOrderByCriadoEmDesc(
+            UUID idColaborador,
+            java.time.LocalDate dataUso,
+            Integer idRotaDestino,
+            java.util.Set<StatusForm> status
+    );
+
+    Optional<ColaboradorForm> findTopByIdColaboradorAndIdRotaDestinoAndStatusInAndUtilizadoFalseOrderByCriadoEmDesc(
+            UUID idColaborador,
+            Integer idRotaDestino,
+            java.util.Set<StatusForm> status
+    );
+
     List<ColaboradorForm> findByIdColaboradorOrderByCriadoEmDesc(UUID idColaborador);
     List<ColaboradorForm> findByIdColaboradorAndStatusOrderByCriadoEmDesc(UUID idColaborador, StatusForm status);
-
     List<ColaboradorForm> findAllByOrderByCriadoEmDesc();
     List<ColaboradorForm> findByStatusOrderByCriadoEmDesc(StatusForm status);
 }
