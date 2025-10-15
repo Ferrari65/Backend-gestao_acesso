@@ -13,6 +13,10 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
 
+    @Override
+    @EntityGraph(attributePaths = {"cidade", "role"})
+    Optional<User> findById(UUID id);
+
     interface Resumo {
         String getNome();
         String getMatricula();

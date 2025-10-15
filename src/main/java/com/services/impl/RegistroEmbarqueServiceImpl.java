@@ -19,13 +19,12 @@ import com.services.registroEmbarque.RegistroEmbarqueService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
 
 import java.time.OffsetDateTime;
-import java.util.EnumSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +37,7 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
     private final LiderRotaRepository liderRotaRepo;
     private final RotaColaboradorRepository rotaColabRepo;
     private final ColaboradorFormRepository colabFormRepo;
+
 
     @Transactional
     @Override
@@ -145,4 +145,18 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
                 .atualizadoEm(e.getAtualizadoEm())
                 .build();
     }
+
+
+    @Override
+    public List<RegistroEmbarqueResponse> listarTodos(UUID idViagem) {
+        Specification<RegistroEmbarque> spec =
+                (root, q, cb) -> cb.equal(root.join("viagem").get("idViagem"), idViagem);
+
+        return repo.findAll(spec, Sort.by(Sort.Direction.DESC, "criadoEm"))
+                .stream()
+                .map(RegistroEmbarqueResponse::from)
+                .toList();
+    }
+
+
 }

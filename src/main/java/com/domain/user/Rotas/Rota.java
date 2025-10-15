@@ -5,9 +5,6 @@ import com.domain.user.endereco.Cidade;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -19,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(of = "idRota")
 public class Rota {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_rota")
@@ -51,22 +49,27 @@ public class Rota {
 
     @PrePersist
     @PreUpdate
-    public void normalizarNome(){
-        if (nome != null){
+    private void prePersistUpdate() {
+        normalizarNomeHelper();
+        ajustarHoraParaMinutosHelper();
+    }
+
+    private void normalizarNomeHelper() {
+        if (nome != null) {
             nome = nome.trim().toUpperCase();
         }
     }
-    public void setPeriodo(Periodo periodo) {
-        this.periodo = (periodo != null) ? Periodo.valueOf(periodo.name().toUpperCase()) : null;
-    }
 
-    @PrePersist @PreUpdate
-    private void ajustarHoraParaMinutos() {
+    private void ajustarHoraParaMinutosHelper() {
         if (horaPartida != null) {
             horaPartida = horaPartida.truncatedTo(ChronoUnit.MINUTES);
         }
         if (horaChegada != null) {
             horaChegada = horaChegada.truncatedTo(ChronoUnit.MINUTES);
         }
+    }
+
+    public void setPeriodo(Periodo periodo) {
+        this.periodo = (periodo != null) ? Periodo.valueOf(periodo.name().toUpperCase()) : null;
     }
 }
