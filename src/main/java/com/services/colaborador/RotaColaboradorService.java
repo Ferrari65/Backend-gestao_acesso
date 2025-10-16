@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -106,6 +107,22 @@ public class RotaColaboradorService {
                         rc.getPontos() != null ? rc.getPontos().getIdPonto() : null
                 ))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<RotaColaboradorResponse> buscarAtualPorColaborador(UUID idColaborador) {
+        var user = userRepo.findById(idColaborador)
+                .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
+
+        return rotaColabRepo
+                .findFirstByColaborador_IdColaboradorOrderByDataUsoDesc(idColaborador)
+                .map(rc -> new RotaColaboradorResponse(
+                        rc.getRota().getIdRota(),
+                        user.getIdColaborador(),
+                        user.getNome(),
+                        rc.getDataUso(),
+                        rc.getPontos() != null ? rc.getPontos().getIdPonto() : null
+                ));
     }
 
     @Transactional

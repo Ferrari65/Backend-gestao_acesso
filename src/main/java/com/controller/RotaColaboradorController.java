@@ -15,14 +15,14 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/rotas/{idRota}/colaboradores")
+@RequestMapping("/rotaColaborador")
 @Tag(name = "Rotas - Colaboradores", description = "Endpoints para Gerenciamento e atribuição de Rota Colaborador")
 @SecurityRequirement(name = "bearerAuth")
 public class RotaColaboradorController {
 
     private final RotaColaboradorService service;
 
-    @PutMapping("/{idColaborador}")
+    @PutMapping("/{idRota}/{idColaborador}")
     @PreAuthorize("hasRole('GESTOR')")
     @Operation(summary = "Atribuir colaborador à rota")
     public ResponseEntity<RotaColaboradorResponse> atribuir(
@@ -34,7 +34,7 @@ public class RotaColaboradorController {
         return ResponseEntity.ok(resp);
     }
 
-    @GetMapping
+    @GetMapping ("/{idRota}/colaboradores" )
     @PreAuthorize("hasAnyRole('GESTOR','LIDER','COLABORADOR')")
     @Operation(summary = "Listar colaboradores atribuídos a uma rota")
     public ResponseEntity<List<RotaColaboradorResponse>> listarPorRota(@PathVariable Integer idRota) {
@@ -42,7 +42,7 @@ public class RotaColaboradorController {
         return resp.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(resp);
     }
 
-    @DeleteMapping("/{idColaborador}")
+    @DeleteMapping("/{idRota}/{idColaborador}")
     @PreAuthorize("hasRole('GESTOR')")
     @Operation(summary = "Remover colaborador da rota")
     public ResponseEntity<Void> remover(
@@ -51,5 +51,13 @@ public class RotaColaboradorController {
     ) {
         service.remover(idRota, idColaborador);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping ("/{idColaborador}/rota")
+    @PreAuthorize("hasAnyRole('GESTOR','LIDER','COLABORADOR')")
+    @Operation(summary = "Listar rota do colaborador")
+    public ResponseEntity<List<RotaColaboradorResponse>> listar(@PathVariable UUID idColaborador) {
+        var lista = service.listarPorColaborador(idColaborador);
+        return lista.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(lista);
     }
 }
