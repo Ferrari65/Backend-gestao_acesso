@@ -4,10 +4,9 @@ import com.domain.user.Enum.TipoViagem;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -25,6 +24,9 @@ public class ViagemRota {
     @Column(name = "id_viagem", updatable = false, nullable = false)
     private UUID idViagem;
 
+    @Column(nullable = false) // dia da viagem
+    private LocalDate data;
+
     @Column(name = "id_rota", nullable = false)
     private Integer idRota;
 
@@ -35,31 +37,33 @@ public class ViagemRota {
     private Integer idVeiculo;
 
     @Column(name = "saida_prevista", nullable = false)
-    private LocalDate saidaPrevista;
+    private LocalTime saidaPrevista;
 
     @Column(name = "chegada_prevista", nullable = false)
-    private LocalDate chegadaPrevista;
+    private LocalTime chegadaPrevista;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.NAMED_ENUM)
     @Column(name = "tipo_viagem", nullable = false, columnDefinition = "tipo_viagem")
     private TipoViagem tipoViagem;
 
+    @Column(nullable = false)
     private boolean ativo = true;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, columnDefinition = "timestamptz")
     private OffsetDateTime createdAt;
 
+    @Column(columnDefinition = "timestamptz")
     private OffsetDateTime updated;
 
     @PrePersist
-    void prePersist(){
-        var now = OffsetDateTime.now();
-        this.createdAt = now;
-        this.updated = now;
+    void prePersist() {
+        this.updated = OffsetDateTime.now();
     }
 
     @PreUpdate
-    void preUpdate() { this.updated = OffsetDateTime.now(); }
+    void preUpdate() {
+        this.updated = OffsetDateTime.now();
+    }
 }

@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,12 +73,24 @@ public class ViagemRotaController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/reativar")
-    @Operation(summary = "Reativar viagem")
-    @ApiResponse(responseCode = "204", description = "Reativado")
-    @ApiResponse(responseCode = "404", description = "Viagem não encontrada", content = @Content)
-    public ResponseEntity<Void> reativar(@PathVariable UUID id) {
-        service.reativar(id);
+    @PatchMapping("/viagens/{id}/ativo")
+    @PreAuthorize("hasRole('GESTOR')")
+    @Operation(summary = "Ativar/Inativar viagem (toggle de ativo)")
+    public ResponseEntity<Void> atualizarAtivo(
+            @PathVariable UUID id,
+            @RequestParam boolean value
+    ) {
+        service.atualizarAtivo(id, value);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping("/viagens")
+    public ResponseEntity<List<ViagemRotaResponseDTO>> listarPorDia(
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            LocalDate data
+    ) {
+        var lista = service.listarPorData(data);
+        return lista.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(lista);
     }
 }

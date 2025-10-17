@@ -19,9 +19,9 @@ import com.services.registroEmbarque.RegistroEmbarqueService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Sort;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -30,7 +30,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
 
-
     private final RegistroEmbarqueRepository repo;
     private final ViagemRepository viagemRepo;
     private final UserRepository userRepo;
@@ -38,28 +37,27 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
     private final RotaColaboradorRepository rotaColabRepo;
     private final ColaboradorFormRepository colabFormRepo;
 
-
     @Transactional
     @Override
-    public  RegistroEmbarqueResponse registrar (UUID idViagem, RegistrarEmbarqueRequest req, UUID idValidador){
+    public RegistroEmbarqueResponse registrar(UUID idViagem, RegistrarEmbarqueRequest req, UUID idValidador) {
 
         ViagemRota viagem = viagemRepo.findById(idViagem)
                 .orElseThrow(() -> new EntityNotFoundException("Viagem nao encontrada"));
 
         Integer idRota = viagem.getIdRota();
-        var dataViagem = viagem.getSaidaPrevista();
+        var dataViagem = viagem.getData();
 
-        String matricula = req.getIdentificador() == null ? "" : req.getIdentificador().trim();
-        if (matricula.isBlank()) {
-             throw  new IllegalArgumentException("Identificador vazio");
+        String identificador = req.getIdentificador() == null ? "" : req.getIdentificador().trim();
+        if (identificador.isBlank()) {
+            throw new IllegalArgumentException("Identificador vazio");
         }
-        User colaborador = userRepo.findByMatricula(matricula)
+        User colaborador = userRepo.findByMatricula(identificador)
                 .orElseThrow(() -> new EntityNotFoundException("Colaborador nao encontrado"));
 
         boolean isLider = liderRotaRepo
                 .existsByRota_IdRotaAndColaborador_IdColaboradorAndAtivoTrue(idRota, idValidador);
         if (!isLider) {
-            throw  new IllegalStateException("Usuario autenticado nao e lider ativo desta rota");
+            throw new IllegalStateException("Usuario autenticado nao e lider ativo desta rota");
         }
         User validador = userRepo.findById(idValidador)
                 .orElseThrow(() -> new EntityNotFoundException("Validador não encontrado"));
@@ -83,7 +81,6 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
             if (exact.isPresent()) {
                 aviso = exact.get();
             } else {
-
                 Optional<ColaboradorForm> byRoute = colabFormRepo
                         .findTopByIdColaboradorAndIdRotaDestinoAndStatusInAndUtilizadoFalseOrderByCriadoEmDesc(
                                 colaborador.getIdColaborador(), idRota, aceitos
@@ -113,7 +110,7 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
 
         reg = repo.save(reg);
 
-        if (temAvisoPrevio) {
+        if (temAvisoPrevio && status == StatusEmbarque.EMBARCADO) {
             aviso.setUtilizado(true);
             aviso.setUtilizadoEm(OffsetDateTime.now());
             colabFormRepo.save(aviso);
@@ -125,8 +122,8 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
     private MetodoValidacao parseMetodo(String raw) {
         String norm = raw == null ? "" : raw.trim().toUpperCase();
         return switch (norm) {
-            case "COD_BARRA" -> MetodoValidacao.COD_BARRA;
-            case "MANUAL"    -> MetodoValidacao.MANUAL;
+            case "COD_BARRA", "CODIGO_BARRA", "CODBARRA" -> MetodoValidacao.COD_BARRA;
+            case "MANUAL" -> MetodoValidacao.MANUAL;
             default -> throw new IllegalArgumentException("Método de validação inválido: " + raw);
         };
     }
@@ -146,17 +143,15 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
                 .build();
     }
 
-
     @Override
+    @Transactional(Transactional.TxType.SUPPORTS)
     public List<RegistroEmbarqueResponse> listarTodos(UUID idViagem) {
         Specification<RegistroEmbarque> spec =
                 (root, q, cb) -> cb.equal(root.join("viagem").get("idViagem"), idViagem);
 
         return repo.findAll(spec, Sort.by(Sort.Direction.DESC, "criadoEm"))
                 .stream()
-                .map(RegistroEmbarqueResponse::from)
+                .map(this::toResponse)
                 .toList();
     }
-
-
 }

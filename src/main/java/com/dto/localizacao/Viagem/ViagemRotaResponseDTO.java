@@ -4,6 +4,7 @@ import com.domain.user.Enum.TipoViagem;
 import com.domain.user.viagemRota.ViagemRota;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -12,19 +13,21 @@ public record ViagemRotaResponseDTO(
         Integer idRota,
         Integer idMotorista,
         Integer idVeiculo,
-        LocalDate saidaPrevista,
-        LocalDate chegadaPrevista,
+        LocalDate data,
+        LocalTime saidaPrevista,
+        LocalTime chegadaPrevista,
         TipoViagem tipoViagem,
         boolean ativo,
         OffsetDateTime createdAt,
         OffsetDateTime updated
 ) {
-    public static ViagemRotaResponseDTO fromEntity (ViagemRota v) {
+    public static ViagemRotaResponseDTO fromEntity(ViagemRota v) {
         return new ViagemRotaResponseDTO(
                 v.getIdViagem(),
                 v.getIdRota(),
                 v.getIdMotorista(),
                 v.getIdVeiculo(),
+                v.getData(),
                 v.getSaidaPrevista(),
                 v.getChegadaPrevista(),
                 v.getTipoViagem(),

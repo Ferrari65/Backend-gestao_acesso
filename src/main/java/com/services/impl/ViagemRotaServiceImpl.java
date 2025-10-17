@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,12 +24,22 @@ public class ViagemRotaServiceImpl implements ViagemRotaService {
     @Transactional
     public ViagemRotaResponseDTO criar(ViagemRotaRequestDTO dto) {
 
-        if (dto.saidaPrevista() != null && dto.chegadaPrevista() != null
-                && dto.chegadaPrevista().isBefore(dto.saidaPrevista())) {
+        if (dto.data() == null) {
+            throw new IllegalArgumentException("data da viagem é obrigatória");
+        }
+        if (dto.saidaPrevista() == null || dto.chegadaPrevista() == null) {
+            throw new IllegalArgumentException("saidaPrevista e chegadaPrevista são obrigatórias");
+        }
+        if (dto.chegadaPrevista().isBefore(dto.saidaPrevista())) {
+
             throw new IllegalArgumentException("chegadaPrevista não pode ser antes de saidaPrevista");
+        }
+        if (dto.tipoViagem() == null) {
+            throw new IllegalArgumentException("tipoViagem é obrigatório");
         }
 
         ViagemRota v = ViagemRota.builder()
+                .data(dto.data())
                 .idRota(dto.idRota())
                 .idMotorista(dto.idMotorista())
                 .idVeiculo(dto.idVeiculo())
@@ -50,7 +61,6 @@ public class ViagemRotaServiceImpl implements ViagemRotaService {
     @Override
     @Transactional(readOnly = true)
     public List<ViagemRotaResponseDTO> listar(Boolean ativo, Integer idRota) {
-
         if (ativo != null && idRota != null) {
             return viagemRepository.findByIdRota(idRota).stream()
                     .filter(v -> v.isAtivo() == ativo)
@@ -77,18 +87,19 @@ public class ViagemRotaServiceImpl implements ViagemRotaService {
     public ViagemRotaResponseDTO atualizar(UUID id, ViagemRotaRequestDTO dto) {
         var v = pegar(id);
 
-        if (dto.idRota() != null)          v.setIdRota(dto.idRota());
-        if (dto.idMotorista() != null)     v.setIdMotorista(dto.idMotorista());
-        if (dto.idVeiculo() != null)       v.setIdVeiculo(dto.idVeiculo());
+        if (dto.idRota() != null)       v.setIdRota(dto.idRota());
+        if (dto.idMotorista() != null)  v.setIdMotorista(dto.idMotorista());
+        if (dto.idVeiculo() != null)    v.setIdVeiculo(dto.idVeiculo());
+        if (dto.data() != null)         v.setData(dto.data());
 
-        if (dto.saidaPrevista() != null)   v.setSaidaPrevista(dto.saidaPrevista());
-        if (dto.chegadaPrevista() != null) v.setChegadaPrevista(dto.chegadaPrevista());
+        if (dto.saidaPrevista() != null)    v.setSaidaPrevista(dto.saidaPrevista());
+        if (dto.chegadaPrevista() != null)  v.setChegadaPrevista(dto.chegadaPrevista());
         if (v.getSaidaPrevista() != null && v.getChegadaPrevista() != null
                 && v.getChegadaPrevista().isBefore(v.getSaidaPrevista())) {
             throw new IllegalArgumentException("chegadaPrevista não pode ser antes de saidaPrevista");
         }
 
-        if (dto.tipoViagem() != null)      v.setTipoViagem(dto.tipoViagem());
+        if (dto.tipoViagem() != null)   v.setTipoViagem(dto.tipoViagem());
 
         return ViagemRotaResponseDTO.fromEntity(viagemRepository.save(v));
     }
@@ -103,14 +114,22 @@ public class ViagemRotaServiceImpl implements ViagemRotaService {
 
     @Override
     @Transactional
-    public void reativar(UUID id) {
+    public void atualizarAtivo(UUID id, boolean ativo) {
         var v = pegar(id);
-        v.setAtivo(true);
+        v.setAtivo(ativo);
         viagemRepository.save(v);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ViagemRotaResponseDTO> listarPorData(LocalDate data) {
+        return viagemRepository.findByData(data).stream()
+                .map(ViagemRotaResponseDTO::fromEntity)
+                .toList();
     }
 
     private ViagemRota pegar(UUID id) {
         return viagemRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Viagem não encontrada"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Viagem não encontrada"));
     }
 }
