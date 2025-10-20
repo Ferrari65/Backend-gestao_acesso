@@ -10,7 +10,7 @@ public record AcessoResponse(
         UUID id,
         TipoPessoa tipoPessoa,
         PessoaMinDTO condutor,          // id + nome (nome só para exibição)
-        Integer codPortaria,
+        Short codPortaria,
         OffsetDateTime entrada,
         OffsetDateTime saida,
         String observacao,

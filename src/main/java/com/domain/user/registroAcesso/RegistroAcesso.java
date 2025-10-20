@@ -3,6 +3,12 @@ package com.domain.user.registroAcesso;
 import com.domain.user.Enum.TipoPessoa;
 import jakarta.persistence.*;
 import lombok.*;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import jakarta.persistence.*;
+import org.hibernate.type.SqlTypes;
+
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -20,15 +26,16 @@ public class RegistroAcesso {
     @GeneratedValue
     private UUID id;
 
-    @Enumerated (EnumType.STRING)
-    @Column (name = "tipo_pessoa", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "tipo_pessoa", nullable = false, columnDefinition = "tipo_pessoa")
     private TipoPessoa tipoPessoa;
 
     @Column (name = "id_pessoa", nullable = false)
     private UUID idPessoa;
 
     @Column (name = "cod_portaria", nullable = false)
-    private Integer codPortaria;
+    private Short codPortaria;
 
     @Column(nullable = false)
     private OffsetDateTime entrada;

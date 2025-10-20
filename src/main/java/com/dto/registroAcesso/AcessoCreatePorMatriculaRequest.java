@@ -7,7 +7,7 @@ import java.util.List;
 public record AcessoCreatePorMatriculaRequest(
         TipoPessoa tipoPessoa,
         String matriculaOuDocumento,
-        Integer codPortaria,
+        Short codPortaria,
         String observacao,
-        List<String> ocupanteMatriculas
+        List<String> ocupantesMatriculas
 ) {}

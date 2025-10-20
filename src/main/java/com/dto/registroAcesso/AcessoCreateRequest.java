@@ -8,7 +8,7 @@ import java.util.UUID;
 public record AcessoCreateRequest(
         TipoPessoa tipoPessoa,
         UUID idPessoa,
-        Integer codPortaria,
+        Short codPortaria,
         String observacao,
         List<UUID> ocupantes
 ) {}

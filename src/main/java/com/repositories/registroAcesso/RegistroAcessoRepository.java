@@ -12,13 +12,14 @@ import java.util.UUID;
 
 public interface RegistroAcessoRepository extends JpaRepository<RegistroAcesso, UUID> {
 
-    @Query("""
-      select r from RegistroAcesso r
-       where r.idPessoa = :idPessoa
-         and r.tipoPessoa = :tipoPessoa
-         and r.saida is null
-    """)
-    Optional<RegistroAcesso> findAbertoDoCondutor(UUID idPessoa, TipoPessoa tipoPessoa);
+    @Query(value = """
+    SELECT * FROM registro_acesso
+     WHERE id_pessoa = :idPessoa
+       AND tipo_pessoa = CAST(:tipoPessoa AS tipo_pessoa)
+       AND saida IS NULL
+     LIMIT 1
+""", nativeQuery = true)
+    Optional<RegistroAcesso> findAbertoDoCondutor(UUID idPessoa, String tipoPessoa);
 
     @Query("select r from RegistroAcesso r where r.saida is null order by r.entrada desc")
     List<RegistroAcesso> findAbertos();
