@@ -12,23 +12,21 @@ import java.util.UUID;
 
 public interface RegistroAcessoRepository extends JpaRepository<RegistroAcesso, UUID> {
 
-    @Query(value = """
-    SELECT * FROM registro_acesso
-     WHERE id_pessoa = :idPessoa
-       AND tipo_pessoa = CAST(:tipoPessoa AS tipo_pessoa)
-       AND saida IS NULL
-     LIMIT 1
-""", nativeQuery = true)
-    Optional<RegistroAcesso> findAbertoDoCondutor(UUID idPessoa, String tipoPessoa);
+    List<RegistroAcesso> findByEntradaGreaterThanEqualAndEntradaLessThanOrderByEntradaDesc(
+            OffsetDateTime inicio,
+            OffsetDateTime fimExclusivo
+    );
 
-    @Query("select r from RegistroAcesso r where r.saida is null order by r.entrada desc")
+    Optional<RegistroAcesso> findById(UUID id);
+
+    Optional<RegistroAcesso> findByIdAndSaidaIsNull(UUID id);
+
+    @Query("SELECT r FROM RegistroAcesso r WHERE r.idPessoa = :idPessoa AND r.tipoPessoa = :tipoPessoa AND r.saida IS NULL")
+    Optional<RegistroAcesso> findAbertoDoCondutor(UUID idPessoa, TipoPessoa tipoPessoa);
+
+    @Query("SELECT r FROM RegistroAcesso r WHERE r.saida IS NULL")
     List<RegistroAcesso> findAbertos();
 
-    @Query("""
-      select r from RegistroAcesso r
-       where r.entrada >= :de and r.entrada <= :ate
-         and (:codPortaria is null or r.codPortaria = :codPortaria)
-       order by r.entrada desc
-    """)
-    List<RegistroAcesso> findHistorico(OffsetDateTime de, OffsetDateTime ate, Integer codPortaria);
+    List<RegistroAcesso> findByCodPortariaOrderByEntradaDesc(Short codPortaria);
+    List<RegistroAcesso> findByTipoPessoaOrderByEntradaDesc(TipoPessoa tipoPessoa);
 }

@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface VisitanteRepository extends JpaRepository<Visitante, UUID> {
     boolean existsByTipoDocumentoAndNumeroDocumento(TipoDocumento tipoDocumento, String numeroDocumento);
     List<Visitante> findAllByAtivo(boolean ativo, Sort sort);
-    Optional<Visitante> findByDocumento(String documento);
+
+    Optional<Visitante> findByNumeroDocumento(String numeroDocumento);   // <— ajuste aqui
     Optional<Visitante> findByIdAndAtivoTrue(UUID id);
 }

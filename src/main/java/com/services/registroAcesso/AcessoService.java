@@ -7,12 +7,15 @@ import com.dto.registroAcesso.*;
 import com.repositories.UserRepository;
 import com.repositories.registroAcesso.RegistroAcessoOcupanteRepository;
 import com.repositories.registroAcesso.RegistroAcessoRepository;
-import com.repositories.visitante.VisitanteRepository;               // <-- novo
+import com.repositories.visitante.VisitanteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.UUID;
@@ -21,12 +24,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AcessoService {
 
-    private static final Set<Short> PORTARIAS_VALIDAS = Set.of((short)1, (short)2, (short)3, (short)4, (short)5);
+    private static final Set<Short> PORTARIAS_VALIDAS =
+            Set.of((short)1, (short)2, (short)3, (short)4, (short)5);
+
+    private static final ZoneId ZONE_ID = ZoneId.of("America/Sao_Paulo");
 
     private final RegistroAcessoRepository registroRepo;
     private final RegistroAcessoOcupanteRepository ocupanteRepo;
     private final UserRepository userRepo;
     private final VisitanteRepository visitanteRepo;
+
 
     @Transactional
     public AcessoResponse criar(AcessoCreateRequest req) {
@@ -42,12 +49,11 @@ public class AcessoService {
         registroRepo.findAbertoDoCondutor(req.idPessoa(), req.tipoPessoa())
                 .ifPresent(r -> { throw new IllegalStateException("Já existe um acesso aberto para este condutor."); });
 
-        // Regra: por simplicidade, VISITANTE não tem ocupantes neste release
         List<UUID> ocupantesIds = Optional.ofNullable(req.ocupantes()).orElseGet(List::of);
+
         if (req.tipoPessoa() == TipoPessoa.VISITANTE && !ocupantesIds.isEmpty()) {
             throw new IllegalArgumentException("Visitante não pode ter ocupantes neste endpoint.");
         }
-
         if (ocupantesIds.stream().anyMatch(id -> id.equals(req.idPessoa()))) {
             throw new IllegalArgumentException("O condutor não pode ser ocupante.");
         }
@@ -61,23 +67,25 @@ public class AcessoService {
             }
         }
 
-        var agora = OffsetDateTime.now();
+        OffsetDateTime entradaAgora = OffsetDateTime.now(ZONE_ID);
+
         var reg = RegistroAcesso.builder()
                 .tipoPessoa(req.tipoPessoa())
                 .idPessoa(req.idPessoa())
                 .codPortaria(req.codPortaria())
-                .entrada(agora)
+                .entrada(entradaAgora)
                 .observacao(req.observacao())
                 .build();
 
         reg = registroRepo.save(reg);
 
         for (UUID idColab : ocupantesIds) {
-            var oc = RegistroAcessoOcupante.builder()
-                    .registro(reg)
-                    .idColaborador(idColab)
-                    .build();
-            ocupanteRepo.save(oc);
+            ocupanteRepo.save(
+                    RegistroAcessoOcupante.builder()
+                            .registro(reg)
+                            .idColaborador(idColab)
+                            .build()
+            );
         }
 
         return montarResponse(reg);
@@ -96,7 +104,7 @@ public class AcessoService {
             case COLABORADOR -> userRepo.findByMatricula(req.matriculaOuDocumento())
                     .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado pela matrícula"))
                     .getId();
-            case VISITANTE -> visitanteRepo.findByDocumento(req.matriculaOuDocumento())
+            case VISITANTE -> visitanteRepo.findByNumeroDocumento(req.matriculaOuDocumento())
                     .orElseThrow(() -> new NoSuchElementException("Visitante não encontrado pelo documento"))
                     .getId();
         };
@@ -117,11 +125,7 @@ public class AcessoService {
         }
 
         return criar(new AcessoCreateRequest(
-                req.tipoPessoa(),
-                idCondutor,
-                req.codPortaria(),
-                req.observacao(),
-                ocupantesIds
+                req.tipoPessoa(), idCondutor, req.codPortaria(), req.observacao(), ocupantesIds
         ));
     }
 
@@ -131,14 +135,14 @@ public class AcessoService {
                 .orElseThrow(() -> new NoSuchElementException("Registro não encontrado"));
         if (reg.getSaida() != null) throw new IllegalStateException("Registro já está fechado.");
 
-        reg.setSaida(OffsetDateTime.now());
+        reg.setSaida(OffsetDateTime.now(ZONE_ID));
+
         if (req != null && req.observacao() != null && !req.observacao().isBlank()) {
             reg.setObservacao(reg.getObservacao() == null
                     ? req.observacao()
                     : (reg.getObservacao() + " | " + req.observacao()));
         }
         reg = registroRepo.save(reg);
-
         return montarResponse(reg);
     }
 
@@ -148,11 +152,38 @@ public class AcessoService {
                 .toList();
     }
 
-    public List<AcessoResponse> listarHistorico(OffsetDateTime de, OffsetDateTime ate, Integer codPortaria) {
-        return registroRepo.findHistorico(de, ate, codPortaria).stream()
+    public List<AcessoResponse> listarHistoricoPorData(LocalDate de, LocalDate ate) {
+        LocalDate hoje = LocalDate.now();
+        LocalDate ini = (de  != null) ? de  : hoje.minusDays(7);
+        LocalDate fim = (ate != null) ? ate : hoje;
+        if (fim.isBefore(ini)) {
+            throw new IllegalArgumentException("Parâmetro 'ate' não pode ser anterior a 'de'.");
+        }
+
+        OffsetDateTime inicioLocal = ini.atStartOfDay(ZONE_ID).toOffsetDateTime();
+
+        OffsetDateTime fimExclusivoLocal = fim.plusDays(1).atStartOfDay(ZONE_ID).toOffsetDateTime();
+
+        OffsetDateTime inicioUTC = inicioLocal.withOffsetSameInstant(ZoneOffset.UTC);
+        OffsetDateTime fimExclusivoUTC = fimExclusivoLocal.withOffsetSameInstant(ZoneOffset.UTC);
+
+        return registroRepo
+                .findByEntradaGreaterThanEqualAndEntradaLessThanOrderByEntradaDesc(inicioUTC, fimExclusivoUTC)
+                .stream()
                 .map(this::montarResponse)
                 .toList();
     }
+
+    public List<AcessoResponse> listarHistoricoSomentePortaria(Short codPortaria) {
+        return registroRepo.findByCodPortariaOrderByEntradaDesc(codPortaria)
+                .stream().map(this::montarResponse).toList();
+    }
+
+    public List<AcessoResponse> listarHistoricoSomenteTipo(TipoPessoa tipoPessoa) {
+        return registroRepo.findByTipoPessoaOrderByEntradaDesc(tipoPessoa)
+                .stream().map(this::montarResponse).toList();
+    }
+
 
     private void validarPessoaExiste(TipoPessoa tipo, UUID id) {
         if (tipo == TipoPessoa.COLABORADOR) {

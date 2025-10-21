@@ -133,6 +133,7 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
                 .idEmbarque(e.getIdEmbarque())
                 .idViagem(e.getViagem().getIdViagem())
                 .idColaborador(e.getColaborador().getIdColaborador())
+                .validadorId(e.getValidador() != null ? e.getValidador().getIdColaborador() : null)
                 .status(e.getStatusEmbarque().name())
                 .metodo(e.getMetodoValidacao().name())
                 .temAvisoPrevio(Boolean.TRUE.equals(e.getTemAvisoPrevio()))

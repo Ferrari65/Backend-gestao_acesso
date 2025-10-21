@@ -1,5 +1,6 @@
 package com.dto.registroEmbarque;
 
+import com.domain.user.colaborador.User;
 import com.domain.user.registroEmbarque.RegistroEmbarque;
 import lombok.*;
 
@@ -15,6 +16,7 @@ public class RegistroEmbarqueResponse {
     private UUID idEmbarque;
     private UUID idViagem;
     private UUID idColaborador;
+    private UUID validadorId;
     private String status;
     private String metodo;
     private boolean temAvisoPrevio;
