@@ -1,7 +1,6 @@
 package com.controller;
 
 import com.dto.colaborador.ColaboradorDTO;
-import com.repositories.UserRepository;
 import com.services.colaborador.ColaboradorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -24,36 +23,19 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/colaboradores")
 @Tag(name="Colaboradores", description = "Endpoints para gerenciamento de Colaborador")
-public class ColaboradorController {
+public class ColaboradorController implements com.controller.docs.ColaboradorControllerDocs {
     private final ColaboradorService service;
 
     @PreAuthorize("hasAnyRole('GESTOR','LIDER')")
     @GetMapping
-    @Operation(summary = "Listar todos colaboradores",
-            description = "Listar todos colaboradores",
-        responses = {
-            @ApiResponse(
-                    description = "Success",
-                    responseCode = "200",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    array = @ArraySchema(schema = @Schema(implementation = ColaboradorDTO.class))
-                            )
-                    }),
-                @ApiResponse (description = "No Content", responseCode = "204" , content = @Content),
-                @ApiResponse (description = "Bad Request", responseCode = "400", content = @Content),
-                @ApiResponse (description = "Unauthorized", responseCode = "401", content = @Content),
-                @ApiResponse (description = "Not Found", responseCode = "404", content = @Content),
-                @ApiResponse (description = "Internal Server Error", responseCode = "500",content = @Content)
-        }
-    )
+    @Override
     public ResponseEntity<List<ColaboradorDTO>> listarColaborador() {
         var list = service.listar();
         return list.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(list);
     }
 
     @GetMapping("/{idColaborador}")
+    @Override
     public ResponseEntity<ColaboradorDTO> buscarPorId(@PathVariable UUID idColaborador) {
         return ResponseEntity.ok(service.buscarPorId(idColaborador));
     }
