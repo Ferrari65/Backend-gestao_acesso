@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Relatório • Acessos à Portaria</title>
+    <style type="text/css">
+        /*<![CDATA[*/
+        @page { size: A4; margin: 18mm 15mm 20mm 15mm; }
+        :root { --fg:#111; --muted:#666; --line:#999; --bg-head:#efefef; }
+        html, body { color: var(--fg); }
+        body { font-family: sans-serif; font-size: 11px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .titulo { font-size: 16px; font-weight: 700; }
+        .meta { font-size: 10px; color: var(--muted); }
+
+        .filtros, .sumario { margin: 6px 0 12px; font-size: 10px; }
+        .sumario b { margin-right: 2px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid var(--line); padding: 6px; vertical-align: top; }
+        th { background: var(--bg-head); text-align: left; }
+        tbody tr:nth-child(odd) td { background: #fafafa; }
+
+        .rodape { position: running(footer); font-size: 10px; color: var(--muted); margin-top: 8px; }
+        @page { @bottom-center { content: element(footer); } }
+        /*]]>*/
+    </style>
+</head>
+<body>
+<!-- Cabeçalho -->
+<div class="header">
+    <div class="titulo">Relatório de Acessos à Portaria</div>
+    <div class="meta">
+        Gerado em:
+        <span th:text="${#temporals.format(geradoEm, 'dd/MM/yyyy HH:mm')}">22/10/2025 09:00</span>
+    </div>
+</div>
+
+<!-- Filtros aplicados -->
+<div class="filtros">
+    <b>Período:</b>
+    <span th:text="${filtro.de()!=null ? #temporals.format(filtro.de(),'dd/MM/yyyy') : '—'}">01/10/2025</span>
+    a
+    <span th:text="${filtro.ate()!=null ? #temporals.format(filtro.ate(),'dd/MM/yyyy') : '—'}">22/10/2025</span>
+    &#160;|&#160; <b>Tipo:</b> <span th:text="${filtro.tipoPessoa()!=null ? filtro.tipoPessoa() : 'Todos'}">Todos</span>
+    &#160;|&#160; <b>Portaria:</b> <span th:text="${filtro.codPortaria()!=null ? filtro.codPortaria() : 'Todas'}">Todas</span>
+    &#160;|&#160; <b>Somente Abertos:</b>
+    <span th:text="${filtro.somenteAbertos()!=null ? filtro.somenteAbertos() : false}">false</span>
+    &#160;|&#160; <b>Incluir Ocupantes:</b>
+    <span th:text="${filtro.incluirOcupantes()!=null ? filtro.incluirOcupantes() : true}">true</span>
+</div>
+
+<!-- KPIs -->
+<div class="sumario">
+    <b>Total:</b> <span th:text="${totaisGeral}">0</span>
+    &#160;|&#160; <b>Abertos:</b> <span th:text="${totaisAbertos}">0</span>
+    &#160;|&#160; <b>Finalizados:</b> <span th:text="${totaisFinalizados}">0</span>
+</div>
+
+<!-- Tabela principal -->
+<table>
+    <thead>
+    <tr>
+        <th>Tipo</th>
+        <th>Condutor</th>
+        <th>Condutor (ID)</th>
+        <th>Portaria</th>
+        <th>Entrada (Data)</th>
+        <th>Entrada (Hora)</th>
+        <th>Saída (Data)</th>
+        <th>Saída (Hora)</th>
+        <th>Situação</th>
+        <th th:if="${filtro.incluirOcupantes()}">Ocupantes</th>
+        <th>Observação</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="r : ${linhas}">
+        <td th:text="${r.tipoPessoa()}">COLABORADOR</td>
+        <td th:text="${r.condutorNome()}">Maria Silva</td>
+        <td th:text="${r.condutorId()}">59a6…d2</td>
+        <td th:text="${r.codPortaria()}">1</td>
+        <td th:text="${r.dataEntrada()!=null ? #temporals.format(r.dataEntrada(),'dd/MM/yyyy') : '—'}">21/10/2025</td>
+        <td th:text="${r.horaEntrada()!=null ? #temporals.format(r.horaEntrada(),'HH:mm') : '—'}">07:31</td>
+        <td th:text="${r.dataSaida()!=null ? #temporals.format(r.dataSaida(),'dd/MM/yyyy') : '—'}">21/10/2025</td>
+        <td th:text="${r.horaSaida()!=null ? #temporals.format(r.horaSaida(),'HH:mm') : '—'}">17:02</td>
+        <td th:text="${r.situacao()}">FINALIZADO</td>
+        <td th:if="${filtro.incluirOcupantes()}" th:text="${r.ocupantes()}">Carla; João</td>
+        <td th:text="${r.observacao()}">Visita técnica</td>
+    </tr>
+
+    <tr th:if="${#lists.isEmpty(linhas)}">
+        <td th:colspan="${filtro.incluirOcupantes() ? 11 : 10}" style="text-align:center;color:#666;">
+            Sem registros para os filtros informados.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- Rodapé com numeração (evite símbolos especiais) -->
+<div class="rodape" id="footer" style="display: block; position: running(footer);">
+    TrackPass | Gestão de Acesso | Acessos à Portaria | Página <span class="pageNumber"></span> de <span class="totalPages"></span>
+</div>
+</body>
+</html>
