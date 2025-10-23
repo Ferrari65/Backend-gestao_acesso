@@ -4,11 +4,13 @@ import com.domain.user.Enum.TipoPessoa;
 import com.domain.user.registroAcesso.RegistroAcesso;
 import com.domain.user.relatorio.registroAcesso.AcessoRelatorioFiltro;
 import com.domain.user.relatorio.registroAcesso.AcessoRelatorioRow;
+import com.dto.registroAcesso.AcessoResponse;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.repositories.UserRepository;
 import com.repositories.registroAcesso.RegistroAcessoOcupanteRepository;
 import com.repositories.registroAcesso.RegistroAcessoRepository;
 import com.repositories.visitante.VisitanteRepository;
+import com.services.registroAcesso.AcessoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,112 +30,52 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AcessoReportService {
 
-    private final RegistroAcessoRepository registroRepo;
-    private final RegistroAcessoOcupanteRepository ocupanteRepo;
-    private final UserRepository userRepo;
-    private final VisitanteRepository visitanteRepo;
+    private final AcessoService acessoService;
     private final TemplateEngine templateEngine;
 
-    private static final ZoneId ZONE_ID = ZoneId.of("America/Sao_Paulo");
+    public byte[] gerarPdf(LocalDate de, LocalDate ate,
+                           Boolean abertos, Short codPortaria, String tipoPessoaStr) {
 
-    @Transactional(readOnly = true)
-    public byte[] gerarPdf(AcessoRelatorioFiltro filtro) {
-
-        LocalDate hoje = LocalDate.now(ZONE_ID);
-        LocalDate de  = (filtro.de()  != null) ? filtro.de()  : hoje.minusDays(7);
-        LocalDate ate = (filtro.ate() != null) ? filtro.ate() : hoje;
-        if (ate.isBefore(de)) throw new IllegalArgumentException("'ate' não pode ser anterior a 'de'.");
-
-        OffsetDateTime inicioLocal      = de.atStartOfDay(ZONE_ID).toOffsetDateTime();
-        OffsetDateTime fimExclusivoLocal= ate.plusDays(1).atStartOfDay(ZONE_ID).toOffsetDateTime();
-        OffsetDateTime inicioUTC        = inicioLocal.withOffsetSameInstant(ZoneOffset.UTC);
-        OffsetDateTime fimExclusivoUTC  = fimExclusivoLocal.withOffsetSameInstant(ZoneOffset.UTC);
-
-        List<RegistroAcesso> base = registroRepo
-                .findByEntradaGreaterThanEqualAndEntradaLessThanOrderByEntradaDesc(inicioUTC, fimExclusivoUTC);
-
-        var stream = base.stream();
-        if (filtro.tipoPessoa() != null) {
-            stream = stream.filter(r -> r.getTipoPessoa() == filtro.tipoPessoa());
-        }
-        if (filtro.codPortaria() != null) {
-            stream = stream.filter(r -> filtro.codPortaria().equals(r.getCodPortaria()));
-        }
-        if (filtro.isSomenteAbertos()) {
-            stream = stream.filter(r -> r.getSaida() == null);
+        // 🔹 buscar dados reais do banco via AcessoService
+        List<AcessoResponse> linhas;
+        if (abertos != null && abertos) {
+            linhas = acessoService.listarAbertos();
+        } else if (codPortaria != null) {
+            linhas = acessoService.listarHistoricoSomentePortaria(codPortaria);
+        } else if (tipoPessoaStr != null) {
+            TipoPessoa tipo = TipoPessoa.valueOf(tipoPessoaStr.toUpperCase());
+            linhas = acessoService.listarHistoricoSomenteTipo(tipo);
+        } else {
+            linhas = acessoService.listarHistoricoPorData(de, ate);
         }
 
-        var regs = stream.sorted(Comparator.comparing(RegistroAcesso::getEntrada).reversed()).toList();
-        var linhas = regs.stream().map(r -> {
-            var entradaZ = r.getEntrada() != null ? r.getEntrada().atZoneSameInstant(ZONE_ID) : null;
-            var saidaZ   = r.getSaida() != null ? r.getSaida().atZoneSameInstant(ZONE_ID) : null;
-
-            String condutorNome = resolverNomeCondutor(r.getTipoPessoa(), r.getIdPessoa());
-            String condutorId   = r.getIdPessoa() != null ? r.getIdPessoa().toString() : "-";
-
-            String ocupantesStr = "";
-            if (filtro.isIncluirOcupantes()) {
-                var ocupantes = ocupanteRepo.findByRegistroId(r.getId()).stream()
-                        .map(oc -> resolverNomeColaborador(oc.getIdColaborador()))
-                        .toList();
-                ocupantesStr = String.join("; ", ocupantes);
-            }
-
-            return new AcessoRelatorioRow(
-                    r.getTipoPessoa(),
-                    condutorNome,
-                    condutorId,
-                    r.getCodPortaria(),
-                    entradaZ != null ? entradaZ.toLocalDate() : null,
-                    entradaZ != null ? entradaZ.toLocalTime() : null,
-                    saidaZ   != null ? saidaZ.toLocalDate()   : null,
-                    saidaZ   != null ? saidaZ.toLocalTime()   : null,
-                    r.getSaida() == null ? "ABERTO" : "FINALIZADO",
-                    ocupantesStr,
-                    r.getObservacao()
-            );
-        }).toList();
-
-        var ctx = new Context();
-        ctx.setVariable("filtro", filtro);
+        // 🔹 preparar o contexto Thymeleaf
+        Context ctx = new Context();
         ctx.setVariable("linhas", linhas);
-        ctx.setVariable("geradoEm", OffsetDateTime.now(ZONE_ID));
-        ctx.setVariable("totaisAbertos", linhas.stream().filter(l -> "ABERTO".equals(l.situacao())).count());
-        ctx.setVariable("totaisFinalizados", linhas.stream().filter(l -> "FINALIZADO".equals(l.situacao())).count());
+        ctx.setVariable("filtro", new Object() {
+            public LocalDate de() { return de; }
+            public LocalDate ate() { return ate; }
+            public Boolean somenteAbertos() { return abertos; }
+            public Short codPortaria() { return codPortaria; }
+            public String tipoPessoa() { return tipoPessoaStr; }
+            public Boolean incluirOcupantes() { return true; }
+        });
         ctx.setVariable("totaisGeral", linhas.size());
+        ctx.setVariable("totaisAbertos", linhas.stream().filter(l -> l.saida() == null).count());
+        ctx.setVariable("totaisFinalizados", linhas.stream().filter(l -> l.saida() != null).count());
+        ctx.setVariable("geradoEm", OffsetDateTime.now(ZoneId.of("America/Sao_Paulo")));
 
+        // 🔹 renderizar o HTML usando o template real
         String html = templateEngine.process("relatorios/acessos-portaria", ctx);
 
-        try (var out = new ByteArrayOutputStream()) {
-            new PdfRendererBuilder()
-                    .withHtmlContent(html, getBaseUrl())
-                    .toStream(out)
-                    .run();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.withHtmlContent(html, null);
+            builder.toStream(out);
+            builder.run();
             return out.toByteArray();
         } catch (Exception e) {
             throw new IllegalStateException("Erro ao gerar PDF: " + e.getMessage(), e);
         }
-    }
-
-    private String resolverNomeCondutor(TipoPessoa tipo, UUID id) {
-        if (id == null) return "-";
-        return switch (tipo) {
-            case COLABORADOR -> userRepo.findResumoByIdColaborador(id)
-                    .map(res -> res.getNome())
-                    .orElse(id.toString());
-            case VISITANTE -> visitanteRepo.findById(id)
-                    .map(v -> v.getNomeCompleto())
-                    .orElse(id.toString());
-        };
-    }
-    private String resolverNomeColaborador(UUID id) {
-        if (id == null) return "-";
-        return userRepo.findResumoByIdColaborador(id)
-                .map(res -> res.getNome())
-                .orElse(id.toString());
-    }
-
-    private String getBaseUrl() {
-        return getClass().getResource("/templates/").toExternalForm();
     }
 }

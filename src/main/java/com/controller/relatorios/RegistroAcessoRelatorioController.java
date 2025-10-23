@@ -3,6 +3,10 @@ package com.controller.relatorios;
 import com.domain.user.Enum.TipoPessoa;
 import com.domain.user.relatorio.registroAcesso.AcessoRelatorioFiltro;
 import com.services.relatorio.registroAcesso.AcessoReportService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -20,27 +24,30 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class RegistroAcessoRelatorioController {
 
-    private final AcessoReportService service;
+    private final AcessoReportService reportService;
 
-    @GetMapping(value = "/acessos", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "Relatório de acessos (PDF)")
+    @ApiResponse(
+            responseCode = "200",
+            description = "PDF gerado",
+            content = @Content(
+                    mediaType = "application/pdf",
+                    schema = @Schema(type = "string", format = "binary")
+            )
+    )
+    @GetMapping(value = "/relatorios/acessos", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> gerar(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
-            @RequestParam(required = false) TipoPessoa tipoPessoa,
+            @RequestParam(required = false) LocalDate de,
+            @RequestParam(required = false) LocalDate ate,
+            @RequestParam(required = false) Boolean abertos,
             @RequestParam(required = false) Short codPortaria,
-            @RequestParam(required = false, defaultValue = "false") Boolean somenteAbertos,
-            @RequestParam(required = false, defaultValue = "true")  Boolean incluirOcupantes,
-            @RequestParam(defaultValue = "inline") String disposition // inline | attachment
+            @RequestParam(required = false) String tipoPessoa
     ) {
-        var filtro = new AcessoRelatorioFiltro(de, ate, tipoPessoa, codPortaria, somenteAbertos, incluirOcupantes);
-        byte[] pdf = service.gerarPdf(filtro);
+        byte[] pdf = reportService.gerarPdf(de, ate, abertos, codPortaria, tipoPessoa);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        (disposition.equalsIgnoreCase("attachment") ? "attachment" : "inline")
-                                + "; filename=relatorio-acessos-portaria.pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio-acessos.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }
 }
-
