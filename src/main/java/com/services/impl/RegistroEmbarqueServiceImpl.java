@@ -9,6 +9,7 @@ import com.domain.user.colaborador.User;
 import com.domain.user.registroEmbarque.RegistroEmbarque;
 import com.dto.registroEmbarque.RegistrarEmbarqueRequest;
 import com.dto.registroEmbarque.RegistroEmbarqueResponse;
+import com.exceptions.RegistroEmbarqueException;
 import com.repositories.Colaborador.ColaboradorFormRepository;
 import com.repositories.Rota.RotaColaboradorRepository;
 import com.repositories.UserRepository;
@@ -51,7 +52,7 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
 
         String identificador = req.getIdentificador() == null ? "" : req.getIdentificador().trim();
         if (identificador.isBlank()) {
-            throw new IllegalArgumentException("Identificador vazio");
+            throw new RegistroEmbarqueException("Identificador do colaborador não pode ser vazio.");
         }
 
         User colaborador = userRepo.findByMatricula(identificador)
@@ -60,14 +61,14 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         boolean isLider = liderRotaRepo
                 .existsByRota_IdRotaAndColaborador_IdColaboradorAndAtivoTrue(idRota, idValidador);
         if (!isLider) {
-            throw new IllegalStateException("Usuario autenticado nao e lider ativo desta rota");
+            throw new RegistroEmbarqueException("Usuário autenticado não é líder ativo desta rota.");
         }
 
         User validador = userRepo.findById(idValidador)
                 .orElseThrow(() -> new EntityNotFoundException("Validador não encontrado"));
 
         if (repo.existsByViagemAndColaborador(viagem, colaborador)) {
-            throw new IllegalArgumentException("Colaborador já possui registro nesta viagem.");
+            throw new RegistroEmbarqueException("Colaborador já possui registro nesta viagem.");
         }
 
         boolean pertence = rotaColabRepo
@@ -87,6 +88,7 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
             if (exact.isPresent()) {
                 aviso = exact.get();
             } else {
+
                 Optional<ColaboradorForm> byRoute = colabFormRepo
                         .findTopByIdColaboradorAndIdRotaDestinoAndStatusInAndUtilizadoFalseOrderByCriadoEmDesc(
                                 colaborador.getIdColaborador(), idRota, aceitos
@@ -100,8 +102,8 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         boolean temAvisoPrevio = (aviso != null);
 
         if (!pertence && !temAvisoPrevio) {
-            throw new IllegalArgumentException(
-                    "Colaborador nao pertence a rota desta viagem e nao possui aviso previo liberado para esta rota."
+            throw new RegistroEmbarqueException(
+                    "Colaborador não pertence à rota desta viagem e não possui aviso prévio liberado para esta rota."
             );
         }
 
@@ -135,7 +137,7 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         return switch (norm) {
             case "COD_BARRA", "CODIGO_BARRA", "CODBARRA" -> MetodoValidacao.COD_BARRA;
             case "MANUAL" -> MetodoValidacao.MANUAL;
-            default -> throw new IllegalArgumentException("Método de validação inválido: " + raw);
+            default -> throw new RegistroEmbarqueException("Método de validação inválido: " + raw);
         };
     }
 
