@@ -9,5 +9,4 @@ import java.util.UUID;
 public interface ImpedimentoRepository extends JpaRepository<Impedimento, UUID> {
     List<Impedimento> findByAtivoTrue();
     List<Impedimento> findByIdViagem(UUID idViagem);
-    List<Impedimento> findByIdVeiculo(UUID idVeiculo);
 }

@@ -35,13 +35,19 @@ public class ViagemRotaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Buscar viagem por ID")
+    @GetMapping("/rota/{idRota}")
+    @Operation(
+            summary = "Listar viagens por rota",
+            description = "Lista as viagens filtrando por id da rota. Opcionalmente pode filtrar por ativo."
+    )
     @ApiResponse(responseCode = "200", description = "OK")
-    @ApiResponse(responseCode = "404", description = "Viagem não encontrada", content = @Content)
-    public ViagemRotaResponseDTO buscar(@PathVariable UUID id) {
-        return service.buscar(id);
+    public List<ViagemRotaResponseDTO> listarPorRota(
+            @PathVariable Integer idRota,
+            @RequestParam(required = false) Boolean ativo
+    ) {
+        return service.listar(ativo, idRota);
     }
+
 
     @GetMapping
     @Operation(
@@ -84,13 +90,4 @@ public class ViagemRotaController {
         return ResponseEntity.noContent().build();
     }
 
-
-    @GetMapping("/viagens")
-    public ResponseEntity<List<ViagemRotaResponseDTO>> listarPorDia(
-            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
-            LocalDate data
-    ) {
-        var lista = service.listarPorData(data);
-        return lista.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(lista);
-    }
 }

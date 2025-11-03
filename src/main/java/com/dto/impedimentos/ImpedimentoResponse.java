@@ -12,7 +12,6 @@ public record ImpedimentoResponse(
         SeveridadeImpedimento severidade,
         String descricao,
         UUID idViagem,
-        UUID idVeiculo,
         OffsetDateTime ocorridoEm,
         UUID registradoPor,
         boolean ativo,

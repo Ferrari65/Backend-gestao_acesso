@@ -39,7 +39,9 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
 
     @Transactional
     @Override
-    public RegistroEmbarqueResponse registrar(UUID idViagem, RegistrarEmbarqueRequest req, UUID idValidador) {
+    public RegistroEmbarqueResponse registrar(UUID idViagem,
+                                              RegistrarEmbarqueRequest req,
+                                              UUID idValidador) {
 
         ViagemRota viagem = viagemRepo.findById(idViagem)
                 .orElseThrow(() -> new EntityNotFoundException("Viagem nao encontrada"));
@@ -51,6 +53,7 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         if (identificador.isBlank()) {
             throw new IllegalArgumentException("Identificador vazio");
         }
+
         User colaborador = userRepo.findByMatricula(identificador)
                 .orElseThrow(() -> new EntityNotFoundException("Colaborador nao encontrado"));
 
@@ -59,6 +62,7 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         if (!isLider) {
             throw new IllegalStateException("Usuario autenticado nao e lider ativo desta rota");
         }
+
         User validador = userRepo.findById(idValidador)
                 .orElseThrow(() -> new EntityNotFoundException("Validador não encontrado"));
 
@@ -67,7 +71,9 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         }
 
         boolean pertence = rotaColabRepo
-                .existsByColaborador_IdColaboradorAndRota_IdRota(colaborador.getIdColaborador(), idRota);
+                .existsByColaborador_IdColaboradorAndRota_IdRota(
+                        colaborador.getIdColaborador(), idRota
+                );
 
         ColaboradorForm aviso = null;
         if (!pertence) {
@@ -92,9 +98,14 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         }
 
         boolean temAvisoPrevio = (aviso != null);
-        StatusEmbarque status = (pertence || temAvisoPrevio)
-                ? StatusEmbarque.EMBARCADO
-                : StatusEmbarque.NAO_EMBARCOU;
+
+        if (!pertence && !temAvisoPrevio) {
+            throw new IllegalArgumentException(
+                    "Colaborador nao pertence a rota desta viagem e nao possui aviso previo liberado para esta rota."
+            );
+        }
+
+        StatusEmbarque status = StatusEmbarque.EMBARCADO;
 
         RegistroEmbarque reg = new RegistroEmbarque();
         reg.setViagem(viagem);
