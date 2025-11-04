@@ -39,6 +39,10 @@ public class RotaServiceImpl implements RotaService {
         return rotaRepo.findAll();
     }
 
+    public long contarRotas() {
+        return rotaRepo.count();
+    }
+
     @Override
     public Rota buscar(Integer id) {
         return rotaRepo.findById(id)
