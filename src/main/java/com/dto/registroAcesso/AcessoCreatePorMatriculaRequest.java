@@ -10,6 +10,6 @@ public record AcessoCreatePorMatriculaRequest(
         String matriculaOuDocumento,
         Short codPortaria,
         String observacao,
-        @JsonAlias({"ocupanteMatriculas"})
-        List<String> ocupantesMatriculas
+        List<String> ocupantesMatriculas,
+        List<String> ocupantesDocumentos
 ) {}

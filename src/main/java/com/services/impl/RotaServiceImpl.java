@@ -1,5 +1,6 @@
 package com.services.impl;
 
+import com.domain.user.Enum.Periodo;
 import com.domain.user.Rotas.Rota;
 import com.domain.user.Rotas.RotaPonto;
 import com.domain.user.endereco.Pontos;
@@ -20,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -49,8 +49,13 @@ public class RotaServiceImpl implements RotaService {
         return rotaRepo.count();
     }
 
-    public long contarRotasAtivas(){return rotaRepo.countByAtivoTrue();}
-    public long contarRotasInativas(){return rotaRepo.countByAtivoFalse();}
+    public long contarRotasAtivas() {
+        return rotaRepo.countByAtivoTrue();
+    }
+
+    public long contarRotasInativas() {
+        return rotaRepo.countByAtivoFalse();
+    }
 
     @Override
     public Rota buscar(Integer id) {
@@ -136,6 +141,60 @@ public class RotaServiceImpl implements RotaService {
         );
     }
 
+    public String montarMensagemRotaComMaisColaboradores() {
+        RotaComMaisColaboradoresDTO dto = buscarRotaComMaisColaboradores();
+
+        return "A rota com mais colaboradores é **" + dto.nomeRota()
+                + "**, com " + dto.quantidadeColaboradores()
+                + " colaboradores cadastrados.";
+    }
+
+    public long buscarTotalColaboradoresPorNomeRota(String nomeRota) {
+        String nomeNormalizado = nomeRota.trim();
+        return rotaColabRepo.contarColaboradoresPorNomeRota(nomeNormalizado);
+    }
+
+    public String montarMensagemTotalColaboradoresPorRota(String nomeRota) {
+        long total = buscarTotalColaboradoresPorNomeRota(nomeRota);
+
+        if (total == 0) {
+            return "A " + nomeRota + " não possui colaboradores vinculados no momento.";
+        }
+
+        return "A " + nomeRota + " possui " + total + " colaboradores vinculados.";
+    }
+
+    public long buscarTotalColaboradoresPorNomeRotaEPeriodo(String nomeRota, Periodo periodo) {
+        String nomeNormalizado = nomeRota.trim();
+        return rotaColabRepo.contarColaboradoresPorNomeRotaEPeriodo(
+                nomeNormalizado,
+                periodo.name()
+        );
+    }
+
+    public String montarMensagemTotalColaboradoresPorRotaEPeriodo(String nomeRota, Periodo periodo) {
+        long total = buscarTotalColaboradoresPorNomeRotaEPeriodo(nomeRota, periodo);
+        String periodoTexto = formatarPeriodo(periodo);
+
+        if (total == 0) {
+            return "A " + nomeRota + " no período da " + periodoTexto
+                    + " não possui colaboradores vinculados no momento.";
+        }
+
+        return "A " + nomeRota + " no período da " + periodoTexto
+                + " possui " + total + " colaboradores vinculados.";
+    }
+
+    private String formatarPeriodo(Periodo periodo) {
+        return switch (periodo) {
+            case MANHA -> "manhã";
+            case TARDE -> "tarde";
+            case NOITE -> "noite";
+            default -> periodo.name().toLowerCase();
+        };
+    }
+
+
     public RotaComMaisEmbarquesHojeDTO buscarRotaComMaisEmbarquesHoje() {
         LocalDate hoje = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
 
@@ -168,30 +227,7 @@ public class RotaServiceImpl implements RotaService {
         }
     }
 
-    public long buscarTotalColaboradoresPorNomeRota(String nomeRota) {
-        String nomeNormalizado = nomeRota.trim();
-        return rotaColabRepo.contarColaboradoresPorNomeRota(nomeNormalizado);
-    }
-
-    public String montarMensagemTotalColaboradoresPorRota(String nomeRota) {
-        String nomeNormalizado = nomeRota.trim();
-
-        long total = buscarTotalColaboradoresPorNomeRota(nomeNormalizado);
-
-        if (total == 0) {
-            return "A " + nomeNormalizado + " não possui colaboradores vinculados no momento.";
-        }
-
-        return "A " + nomeNormalizado + " possui " + total + " colaboradores vinculados.";
-    }
-
-    public String montarMensagemRotaComMaisColaboradores() {
-        RotaComMaisColaboradoresDTO dto = buscarRotaComMaisColaboradores();
-
-        return "A rota com mais colaboradores é **" + dto.nomeRota()
-                + "**, com " + dto.quantidadeColaboradores()
-                + " colaboradores cadastrados.";
-    }
+    // ------------ PATCH / CRUD  ------------
 
     @Override
     @Transactional
@@ -238,11 +274,10 @@ public class RotaServiceImpl implements RotaService {
     }
 
     @Transactional(readOnly = true)
-    public List<RotaPontoItemDTO> listarTrajeto(Integer idRota){
+    public List<RotaPontoItemDTO> listarTrajeto(Integer idRota) {
         rotaRepo.findById(idRota).orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
         return rotaPontoRepo.listarPontosDTO(idRota);
     }
-
 
     private void validarOrdemUnica(List<RotaPontoItemRequestDTO> itens) {
         var set = new HashSet<Integer>();
@@ -256,11 +291,10 @@ public class RotaServiceImpl implements RotaService {
         }
     }
 
-    private static final DateTimeFormatter FMT_HH_MM    = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter FMT_HH_MM = DateTimeFormatter.ofPattern("HH:mm");
 
     private LocalTime toLocalTime(String valor) {
         return LocalTime.parse(valor, FMT_HH_MM);
-
     }
 
     private Map<Integer, Pontos> carregarEValidarPontos(Integer idCidade, List<RotaPontoItemRequestDTO> itens) {

@@ -88,8 +88,8 @@
           padding-top: 6px;
         }
 
-        .status-aberto { color: #c0392b; font-weight: 600; }
-        .status-finalizado { color: #27ae60; font-weight: 600; }
+        .status-aberto { color: #27ae60; font-weight: 600; }
+        .status-finalizado { color: #c0392b; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -167,7 +167,6 @@
             <span th:case="'PRESTADOR DE SERVICO'">PREST.</span>
             <span th:case="'TERCEIRO'">TERC.</span>
             <span th:case="'MORADOR'">MOR.</span>
-              <!-- fallback: corta em 7 chars e adiciona ponto -->
             <span th:case="*"
                   th:text="${r.tipoPessoa()!=null && r.tipoPessoa().length() > 7 ? r.tipoPessoa().substring(0,7) + '.' : r.tipoPessoa()}">
               TIPO
@@ -194,9 +193,12 @@
         </td>
 
         <td class="wrap">
-            <span th:if="${#lists.isEmpty(r.ocupantes())}">—</span>
-            <span th:each="p, iter : ${r.ocupantes()}"
-                  th:text="${p.nome + (iter.hasNext() ? ', ' : '')}">João Pereira, Ana Lima</span>
+            <span th:if="${r.ocupantes() == null or #lists.isEmpty(r.ocupantes())}">—</span>
+            <span th:if="${r.ocupantes() != null and !#lists.isEmpty(r.ocupantes())}">
+                <span th:each="p, iter : ${r.ocupantes()}">
+                    <span th:text="${p?.nome}">Nome</span><span th:if="${!iter.last}">, </span>
+                </span>
+            </span>
         </td>
 
         <td class="wrap" th:text="${r.observacao()!=null ? r.observacao() : '—'}">—</td>

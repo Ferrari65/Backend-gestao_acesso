@@ -34,7 +34,6 @@ public class AcessoService {
     private final UserRepository userRepo;
     private final VisitanteRepository visitanteRepo;
 
-
     @Transactional
     public AcessoResponse criar(AcessoCreateRequest req) {
         Objects.requireNonNull(req.tipoPessoa(), "tipoPessoa é obrigatório");
@@ -51,39 +50,29 @@ public class AcessoService {
 
         List<UUID> ocupantesIds = Optional.ofNullable(req.ocupantes()).orElseGet(List::of);
 
-        if (req.tipoPessoa() == TipoPessoa.VISITANTE && !ocupantesIds.isEmpty()) {
-            throw new IllegalArgumentException("Visitante não pode ter ocupantes neste endpoint.");
-        }
         if (ocupantesIds.stream().anyMatch(id -> id.equals(req.idPessoa()))) {
             throw new IllegalArgumentException("O condutor não pode ser ocupante.");
         }
+
         if (new HashSet<>(ocupantesIds).size() != ocupantesIds.size()) {
             throw new IllegalArgumentException("Ocupantes duplicados.");
         }
-        if (!ocupantesIds.isEmpty()) {
-            var encontrados = userRepo.findAllById(ocupantesIds);
-            if (encontrados.size() != ocupantesIds.size()) {
-                throw new IllegalArgumentException("Algum ocupante não existe/está inativo.");
-            }
-        }
-
-        OffsetDateTime entradaAgora = OffsetDateTime.now(ZONE_ID);
 
         var reg = RegistroAcesso.builder()
                 .tipoPessoa(req.tipoPessoa())
                 .idPessoa(req.idPessoa())
                 .codPortaria(req.codPortaria())
-                .entrada(entradaAgora)
+                .entrada(OffsetDateTime.now(ZONE_ID))
                 .observacao(req.observacao())
                 .build();
 
         reg = registroRepo.save(reg);
 
-        for (UUID idColab : ocupantesIds) {
+        for (UUID idOcupante : ocupantesIds) {
             ocupanteRepo.save(
                     RegistroAcessoOcupante.builder()
                             .registro(reg)
-                            .idColaborador(idColab)
+                            .idColaborador(idOcupante)
                             .build()
             );
         }
@@ -110,18 +99,44 @@ public class AcessoService {
         };
 
         List<UUID> ocupantesIds = List.of();
-        if (req.tipoPessoa() == TipoPessoa.COLABORADOR
-                && req.ocupantesMatriculas() != null && !req.ocupantesMatriculas().isEmpty()) {
-            var encontrados = userRepo.findByMatriculaIn(req.ocupantesMatriculas());
-            Map<String, UUID> mapa = encontrados.stream()
-                    .collect(Collectors.toMap(u -> u.getMatricula(), u -> u.getId()));
-            ocupantesIds = req.ocupantesMatriculas().stream().map(m -> {
-                UUID id = mapa.get(m);
-                if (id == null) throw new NoSuchElementException("Matrícula não encontrada: " + m);
-                return id;
-            }).toList();
-        } else if (req.tipoPessoa() == TipoPessoa.VISITANTE && req.ocupantesMatriculas() != null) {
-            throw new IllegalArgumentException("Visitante não pode ter ocupantes neste endpoint.");
+
+        if (req.tipoPessoa() == TipoPessoa.COLABORADOR) {
+            if (req.ocupantesMatriculas() != null && !req.ocupantesMatriculas().isEmpty()) {
+                var encontrados = userRepo.findByMatriculaIn(req.ocupantesMatriculas());
+                Map<String, UUID> mapa = encontrados.stream()
+                        .collect(Collectors.toMap(u -> u.getMatricula(), u -> u.getId()));
+
+                ocupantesIds = req.ocupantesMatriculas().stream().map(m -> {
+                    UUID id = mapa.get(m);
+                    if (id == null) throw new NoSuchElementException("Matrícula não encontrada: " + m);
+                    return id;
+                }).toList();
+            }
+
+        } else {
+            if (req.ocupantesDocumentos() != null && !req.ocupantesDocumentos().isEmpty()) {
+                List<String> documentos = req.ocupantesDocumentos().stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .distinct()
+                        .toList();
+
+                List<UUID> coletados = new ArrayList<>(documentos.size());
+                for (String doc : documentos) {
+                    var v = visitanteRepo.findByNumeroDocumento(doc)
+                            .orElseThrow(() -> new NoSuchElementException("Documento de visitante não encontrado: " + doc));
+                    coletados.add(v.getId());
+                }
+                ocupantesIds = List.copyOf(coletados);
+            }
+        }
+
+        if (ocupantesIds.contains(idCondutor)) {
+            throw new IllegalArgumentException("O condutor não pode ser ocupante.");
+        }
+        if (new HashSet<>(ocupantesIds).size() != ocupantesIds.size()) {
+            throw new IllegalArgumentException("Ocupantes duplicados.");
         }
 
         return criar(new AcessoCreateRequest(
@@ -160,12 +175,11 @@ public class AcessoService {
             throw new IllegalArgumentException("Parâmetro 'ate' não pode ser anterior a 'de'.");
         }
 
-        OffsetDateTime inicioLocal = ini.atStartOfDay(ZONE_ID).toOffsetDateTime();
+        var inicioLocal = ini.atStartOfDay(ZONE_ID).toOffsetDateTime();
+        var fimExclusivoLocal = fim.plusDays(1).atStartOfDay(ZONE_ID).toOffsetDateTime();
 
-        OffsetDateTime fimExclusivoLocal = fim.plusDays(1).atStartOfDay(ZONE_ID).toOffsetDateTime();
-
-        OffsetDateTime inicioUTC = inicioLocal.withOffsetSameInstant(ZoneOffset.UTC);
-        OffsetDateTime fimExclusivoUTC = fimExclusivoLocal.withOffsetSameInstant(ZoneOffset.UTC);
+        var inicioUTC = inicioLocal.withOffsetSameInstant(ZoneOffset.UTC);
+        var fimExclusivoUTC = fimExclusivoLocal.withOffsetSameInstant(ZoneOffset.UTC);
 
         return registroRepo
                 .findByEntradaGreaterThanEqualAndEntradaLessThanOrderByEntradaDesc(inicioUTC, fimExclusivoUTC)
@@ -183,7 +197,6 @@ public class AcessoService {
         return registroRepo.findByTipoPessoaOrderByEntradaDesc(tipoPessoa)
                 .stream().map(this::montarResponse).toList();
     }
-
 
     private void validarPessoaExiste(TipoPessoa tipo, UUID id) {
         if (tipo == TipoPessoa.COLABORADOR) {
@@ -207,7 +220,11 @@ public class AcessoService {
         var ocupantes = ocupanteRepo.findByRegistroId(r.getId()).stream()
                 .map(oc -> {
                     var res = userRepo.findResumoByIdColaborador(oc.getIdColaborador()).orElse(null);
-                    return new PessoaMinDTO(oc.getIdColaborador(), res != null ? res.getNome() : null);
+                    if (res != null) {
+                        return new PessoaMinDTO(oc.getIdColaborador(), res.getNome());
+                    }
+                    var v = visitanteRepo.findById(oc.getIdColaborador()).orElse(null);
+                    return new PessoaMinDTO(oc.getIdColaborador(), v != null ? v.getNomeCompleto() : null);
                 })
                 .toList();
 

@@ -24,7 +24,7 @@ public class ViagemRota {
     @Column(name = "id_viagem", updatable = false, nullable = false)
     private UUID idViagem;
 
-    @Column(nullable = false) // dia da viagem
+    @Column(nullable = false)
     private LocalDate data;
 
     @Column(name = "id_rota", nullable = false)

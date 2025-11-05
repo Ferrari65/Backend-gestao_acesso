@@ -1,5 +1,6 @@
 package com.controller;
 
+import com.domain.user.Enum.Periodo;
 import com.services.impl.RotaServiceImpl;
 import com.services.rag.TrackPassRagService;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/chat")
@@ -20,7 +22,7 @@ public class ChatController {
     @PostMapping("/alimentacao")
     public String indexar(@RequestBody List<String> textos) {
         ragService.indexarDocumentosTrackPass(textos);
-        return " Documentos indexados com sucesso!";
+        return "Documentos indexados com sucesso!";
     }
 
     @GetMapping
@@ -28,6 +30,7 @@ public class ChatController {
 
         String lower = mensagem.toLowerCase();
 
+        // -------------------- ROTAS --------------------
         if (lower.contains("rota")) {
 
             if (lower.contains("ativa")) {
@@ -44,45 +47,54 @@ public class ChatController {
                 long ativas = rotaService.contarRotasAtivas();
                 long inativas = rotaService.contarRotasInativas();
                 long total = ativas + inativas;
-                return "Atualmente o sistema possui " + total + " rotas cadastradas: " +
-                        ativas + " ativas e " + inativas + " inativas.";
+                return "Atualmente o sistema possui " + total + " rotas cadastradas: "
+                        + ativas + " ativas e " + inativas + " inativas.";
             }
 
-            if ( (lower.contains("mais") || lower.contains("maior")) &&
-                    (lower.contains("colaborador") || lower.contains("colaboradores")) ) {
-
+            if ((lower.contains("mais") || lower.contains("maior"))
+                    && (lower.contains("colaborador") || lower.contains("colaboradores"))) {
                 return rotaService.montarMensagemRotaComMaisColaboradores();
             }
+
             if ((lower.contains("mais") || lower.contains("maior"))
                     && (lower.contains("embarque") || lower.contains("embarques"))
                     && lower.contains("hoje")) {
-
                 return rotaService.montarMensagemRotaComMaisEmbarquesHoje();
             }
 
-            if (lower.contains("rota") &&
-                    (lower.contains("colaborador") || lower.contains("colaboradores")) &&
-                    (lower.contains("quantos") || lower.contains("quanto"))) {
+            if ((lower.contains("colaborador") || lower.contains("colaboradores"))
+                    && (lower.contains("quantos") || lower.contains("quanto"))) {
 
-                String nomeRota = extrairNomeCompletoDaRota(mensagem); // ex: "ROTA A" ou "rota A"
-                if (nomeRota != null && !nomeRota.isBlank()) {
-                    return rotaService.montarMensagemTotalColaboradoresPorRota(nomeRota);
-                } else {
-                    return "Me informe o nome da rota. Exemplo: \"Quantos colaboradores estão na ROTA A?\"";
+                String nomeRota = extrairNomeCompletoDaRota(mensagem);
+                Periodo periodo = extrairPeriodoDaMensagem(mensagem);
+
+                if (nomeRota == null || nomeRota.isBlank()) {
+                    return "Me informe o nome da rota. Exemplo: \"Quantos colaboradores estão na ROTA A de manhã?\"";
                 }
+
+                if (periodo == null) {
+                    return "Me informe também o período (manhã, tarde ou noite) dessa rota.";
+                }
+
+                return rotaService.montarMensagemTotalColaboradoresPorRotaEPeriodo(nomeRota, periodo);
             }
         }
 
+        // -------------------- RESPOSTAS GERAIS --------------------
         String prompt = """
-            Você é um assistente do sistema TrackPass de gestão de acesso corporativo.Sempre seja cordial, diga Ola quando te disserem Ola. 
-            Responda "Bom dia" APENAS quando te mandarem bom dia, e Boa noite APENAS quando te mandarem boa noite, e Boa Tarde Apenas quando te mandarem Boa tarde. sempre de forma educada.
+            Você é um assistente do sistema TrackPass de gestão de acesso corporativo.
+            Sempre seja cordial, diga "Olá" quando te disserem "Olá".
+            Responda "Bom dia" APENAS quando te mandarem "bom dia",
+            "Boa tarde" APENAS quando te mandarem "boa tarde",
+            e "Boa noite" APENAS quando te mandarem "boa noite".
+            
             Fora isso, responda apenas perguntas relacionadas ao sistema TrackPass:
             - embarques
             - rotas
             - viagens
             - registros de acesso
             - portaria
-
+            
             Se a pergunta não for sobre o sistema TrackPass, diga:
             "Desculpe, só posso responder sobre o sistema TrackPass de gestão de acesso."
             """;
@@ -91,14 +103,30 @@ public class ChatController {
     }
 
     private String extrairNomeCompletoDaRota(String mensagemOriginal) {
-        var pattern = java.util.regex.Pattern.compile(
-                "(rota\\s+[\\p{L}\\p{N}_-]+)",
-                java.util.regex.Pattern.CASE_INSENSITIVE
-        );
+        var pattern = Pattern.compile("(rota\\s+[\\p{L}\\p{N}_-]+)", Pattern.CASE_INSENSITIVE);
         var matcher = pattern.matcher(mensagemOriginal);
         if (matcher.find()) {
             return matcher.group(1).trim();
         }
+        return null;
+    }
+
+    private Periodo extrairPeriodoDaMensagem(String mensagemOriginal) {
+        String lower = mensagemOriginal.toLowerCase();
+
+        if (lower.contains("manhã") || lower.contains("manha")) {
+            return Periodo.MANHA;
+        }
+        if (lower.contains("tarde")) {
+            return Periodo.TARDE;
+        }
+        if (lower.contains("noite")) {
+            return Periodo.NOITE;
+        }
+        if (lower.contains("madrugada")) {
+            return Periodo.MADRUGADA;
+        }
+
         return null;
     }
 }
