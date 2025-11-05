@@ -2,7 +2,10 @@ package com.repositories.Rota;
 
 import com.domain.user.Rotas.RotaColaborador;
 import com.domain.user.Rotas.RotaColaboradorId;
+import com.projection.RotaComMaisColaboradoresProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +20,25 @@ public interface RotaColaboradorRepository extends JpaRepository<RotaColaborador
     List<RotaColaborador> findByRota_IdRota(Integer idRota);
     List<RotaColaborador> findByColaborador_IdColaborador(UUID idColaborador);
     Optional<RotaColaborador> findFirstByColaborador_IdColaboradorOrderByDataUsoDesc(UUID idColaborador);
+
+    @Query(value = """
+    SELECT 
+        r.nome AS nomeRota,
+        COUNT(rc.id_colaborador) AS quantidadeColaboradores
+    FROM rota_colaborador rc
+    JOIN rotas r ON r.id_rota = rc.id_rota
+    GROUP BY r.id_rota, r.nome
+    ORDER BY quantidadeColaboradores DESC
+    LIMIT 1
+    """, nativeQuery = true)
+    RotaComMaisColaboradoresProjection findRotaComMaisColaboradores();
+
+    @Query(value = """
+        SELECT 
+            COUNT(rc.id_colaborador)
+        FROM rota_colaborador rc
+        JOIN rotas r ON r.id_rota = rc.id_rota
+        WHERE UPPER(r.nome) = UPPER(:nomeRota)
+        """, nativeQuery = true)
+    long contarColaboradoresPorNomeRota(@Param("nomeRota") String nomeRota);
 }

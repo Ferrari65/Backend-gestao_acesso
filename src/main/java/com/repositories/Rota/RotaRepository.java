@@ -12,6 +12,9 @@ import java.util.Optional;
 
 public interface RotaRepository extends JpaRepository<Rota, Integer> {
 
+    long countByAtivoTrue();
+    long countByAtivoFalse();
+
     boolean existsByCidade_IdCidadeAndNomeIgnoreCaseAndPeriodo(
             Integer idCidade, String nome, Periodo periodo);
 

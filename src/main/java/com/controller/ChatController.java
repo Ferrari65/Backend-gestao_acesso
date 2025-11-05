@@ -17,7 +17,7 @@ public class ChatController {
     private final TrackPassRagService ragService;
     private final RotaServiceImpl rotaService;
 
-    @PostMapping("/index")
+    @PostMapping("/alimentacao")
     public String indexar(@RequestBody List<String> textos) {
         ragService.indexarDocumentosTrackPass(textos);
         return " Documentos indexados com sucesso!";
@@ -28,13 +28,49 @@ public class ChatController {
 
         String lower = mensagem.toLowerCase();
 
-        if (lower.contains("quantas rotas") ||
-                lower.contains("total de rotas") ||
-                lower.contains("número de rotas") ||
-                lower.contains("qtd de rotas")) {
+        if (lower.contains("rota")) {
 
-            long total = rotaService.contarRotas();
-            return "Atualmente o sistema possui " + total + " rotas cadastradas.";
+            if (lower.contains("ativa")) {
+                long ativas = rotaService.contarRotasAtivas();
+                return "Atualmente o sistema possui " + ativas + " rotas ativas.";
+            }
+
+            if (lower.contains("inativa")) {
+                long inativas = rotaService.contarRotasInativas();
+                return "Atualmente o sistema possui " + inativas + " rotas inativas.";
+            }
+
+            if (lower.contains("total") || lower.contains("quantas") || lower.contains("todas")) {
+                long ativas = rotaService.contarRotasAtivas();
+                long inativas = rotaService.contarRotasInativas();
+                long total = ativas + inativas;
+                return "Atualmente o sistema possui " + total + " rotas cadastradas: " +
+                        ativas + " ativas e " + inativas + " inativas.";
+            }
+
+            if ( (lower.contains("mais") || lower.contains("maior")) &&
+                    (lower.contains("colaborador") || lower.contains("colaboradores")) ) {
+
+                return rotaService.montarMensagemRotaComMaisColaboradores();
+            }
+            if ((lower.contains("mais") || lower.contains("maior"))
+                    && (lower.contains("embarque") || lower.contains("embarques"))
+                    && lower.contains("hoje")) {
+
+                return rotaService.montarMensagemRotaComMaisEmbarquesHoje();
+            }
+
+            if (lower.contains("rota") &&
+                    (lower.contains("colaborador") || lower.contains("colaboradores")) &&
+                    (lower.contains("quantos") || lower.contains("quanto"))) {
+
+                String nomeRota = extrairNomeCompletoDaRota(mensagem); // ex: "ROTA A" ou "rota A"
+                if (nomeRota != null && !nomeRota.isBlank()) {
+                    return rotaService.montarMensagemTotalColaboradoresPorRota(nomeRota);
+                } else {
+                    return "Me informe o nome da rota. Exemplo: \"Quantos colaboradores estão na ROTA A?\"";
+                }
+            }
         }
 
         String prompt = """
@@ -52,5 +88,17 @@ public class ChatController {
             """;
 
         return chatModel.call(prompt + "\n\nPergunta: " + mensagem);
+    }
+
+    private String extrairNomeCompletoDaRota(String mensagemOriginal) {
+        var pattern = java.util.regex.Pattern.compile(
+                "(rota\\s+[\\p{L}\\p{N}_-]+)",
+                java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+        var matcher = pattern.matcher(mensagemOriginal);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
     }
 }

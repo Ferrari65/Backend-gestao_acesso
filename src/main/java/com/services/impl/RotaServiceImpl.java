@@ -3,14 +3,17 @@ package com.services.impl;
 import com.domain.user.Rotas.Rota;
 import com.domain.user.Rotas.RotaPonto;
 import com.domain.user.endereco.Pontos;
+import com.dto.IA.rota.RotaComMaisEmbarquesHojeDTO;
 import com.dto.PATCH.RotaPatchDTO;
-import com.dto.localizacao.Rota.RotaPontoItemDTO;
-import com.dto.localizacao.Rota.RotaPontoItemRequestDTO;
-import com.dto.localizacao.Rota.RotaRequestDTO;
+import com.dto.localizacao.Rota.*;
+import com.projection.RotaComMaisColaboradoresProjection;
+import com.projection.RotaComMaisEmbarquesHojeProjection;
+import com.repositories.Rota.RotaColaboradorRepository;
 import com.repositories.Rota.RotaPontoRepository;
 import com.repositories.Rota.RotaRepository;
 import com.repositories.localizacao.CidadeRepository;
 import com.repositories.localizacao.PontosRepository;
+import com.repositories.registroEmbarque.RegistroEmbarqueRepository;
 import com.services.localizacao.RotaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,7 +37,8 @@ public class RotaServiceImpl implements RotaService {
     private final CidadeRepository cidadeRepo;
     private final PontosRepository pontoRepo;
     private final RotaPontoRepository rotaPontoRepo;
-
+    private final RotaColaboradorRepository rotaColabRepo;
+    private final RegistroEmbarqueRepository regEmbarqueRepo;
 
     @Override
     public List<Rota> listar() {
@@ -42,6 +48,9 @@ public class RotaServiceImpl implements RotaService {
     public long contarRotas() {
         return rotaRepo.count();
     }
+
+    public long contarRotasAtivas(){return rotaRepo.countByAtivoTrue();}
+    public long contarRotasInativas(){return rotaRepo.countByAtivoFalse();}
 
     @Override
     public Rota buscar(Integer id) {
@@ -109,6 +118,79 @@ public class RotaServiceImpl implements RotaService {
         aplicarSequenciaInPlace(rota, dto.pontos(), mapaPontos);
 
         return rotaRepo.save(rota);
+    }
+
+    public RotaComMaisColaboradoresDTO buscarRotaComMaisColaboradores() {
+        RotaComMaisColaboradoresProjection proj =
+                rotaColabRepo.findRotaComMaisColaboradores();
+
+        if (proj == null) {
+            throw new EntityNotFoundException(
+                    "Nenhuma rota possui colaboradores vinculados."
+            );
+        }
+
+        return new RotaComMaisColaboradoresDTO(
+                proj.getNomeRota(),
+                proj.getQuantidadeColaboradores()
+        );
+    }
+
+    public RotaComMaisEmbarquesHojeDTO buscarRotaComMaisEmbarquesHoje() {
+        LocalDate hoje = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
+
+        RotaComMaisEmbarquesHojeProjection proj =
+                regEmbarqueRepo.findRotaComMaisEmbarquesNaData(hoje);
+
+        if (proj == null) {
+            throw new EntityNotFoundException(
+                    "Nenhuma rota possui embarques registrados hoje."
+            );
+        }
+
+        return new RotaComMaisEmbarquesHojeDTO(
+                proj.getNomeRota(),
+                proj.getTotalEmbarques()
+        );
+    }
+
+    public String montarMensagemRotaComMaisEmbarquesHoje() {
+        try {
+            RotaComMaisEmbarquesHojeDTO dto = buscarRotaComMaisEmbarquesHoje();
+
+            return "Hoje, a rota com mais embarques é "
+                    + dto.nomeRota()
+                    + ", com "
+                    + dto.totalEmbarques()
+                    + " embarques registrados.";
+        } catch (EntityNotFoundException e) {
+            return "Hoje ainda não há nenhum embarque registrado em nenhuma rota.";
+        }
+    }
+
+    public long buscarTotalColaboradoresPorNomeRota(String nomeRota) {
+        String nomeNormalizado = nomeRota.trim();
+        return rotaColabRepo.contarColaboradoresPorNomeRota(nomeNormalizado);
+    }
+
+    public String montarMensagemTotalColaboradoresPorRota(String nomeRota) {
+        String nomeNormalizado = nomeRota.trim();
+
+        long total = buscarTotalColaboradoresPorNomeRota(nomeNormalizado);
+
+        if (total == 0) {
+            return "A " + nomeNormalizado + " não possui colaboradores vinculados no momento.";
+        }
+
+        return "A " + nomeNormalizado + " possui " + total + " colaboradores vinculados.";
+    }
+
+    public String montarMensagemRotaComMaisColaboradores() {
+        RotaComMaisColaboradoresDTO dto = buscarRotaComMaisColaboradores();
+
+        return "A rota com mais colaboradores é **" + dto.nomeRota()
+                + "**, com " + dto.quantidadeColaboradores()
+                + " colaboradores cadastrados.";
     }
 
     @Override
