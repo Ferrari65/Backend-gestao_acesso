@@ -11,7 +11,8 @@ import org.springframework.data.domain.Page;
 public interface RegistroEmbarqueService {
 
     RegistroEmbarqueResponse registrar (UUID idViagem, RegistrarEmbarqueRequest req,UUID idValidador);
-
     List<RegistroEmbarqueResponse> listarTodos(UUID idViagem);
+    String montarMensagemEmbarquesInvalidosSemanaAtual();
+
 
 }

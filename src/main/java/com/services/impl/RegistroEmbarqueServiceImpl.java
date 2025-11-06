@@ -24,7 +24,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -67,10 +70,29 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         User validador = userRepo.findById(idValidador)
                 .orElseThrow(() -> new EntityNotFoundException("Validador não encontrado"));
 
-        if (repo.existsByViagemAndColaborador(viagem, colaborador)) {
-            throw new RegistroEmbarqueException("Colaborador já possui registro nesta viagem.");
-        }
+        ZoneId zone = ZoneId.of("America/Sao_Paulo");
+        OffsetDateTime agora = OffsetDateTime.now(zone);
 
+        OffsetDateTime inicioDia = agora
+                .toLocalDate()
+                .atStartOfDay(zone)
+                .toOffsetDateTime();
+
+        OffsetDateTime fimDia = inicioDia.plusDays(1);
+
+        boolean jaRegistradoHoje = repo
+                .existsByViagemAndColaboradorAndDataEmbarqueBetween(
+                        viagem,
+                        colaborador,
+                        inicioDia,
+                        fimDia
+                );
+
+        if (jaRegistradoHoje) {
+            throw new RegistroEmbarqueException(
+                    "Colaborador já possui registro de embarque hoje nesta viagem."
+            );
+        }
         boolean pertence = rotaColabRepo
                 .existsByColaborador_IdColaboradorAndRota_IdRota(
                         colaborador.getIdColaborador(), idRota
@@ -113,23 +135,44 @@ public class RegistroEmbarqueServiceImpl implements RegistroEmbarqueService {
         reg.setViagem(viagem);
         reg.setColaborador(colaborador);
         reg.setValidador(validador);
-        reg.setDataEmbarque(OffsetDateTime.now());
+        reg.setDataEmbarque(agora);
         reg.setStatusEmbarque(status);
         reg.setMetodoValidacao(parseMetodo(req.getMetodo()));
-        reg.setTemAvisoPrevio(temAvisoPrevio);
+
         if (temAvisoPrevio) {
+            reg.setTemAvisoPrevio(true);
             reg.setAvisoPrevio(aviso);
+
+            aviso.setUtilizado(true);
+            aviso.setUtilizadoEm(agora);
+            colabFormRepo.save(aviso);
+        } else {
+            reg.setTemAvisoPrevio(false);
+            reg.setAvisoPrevio(null);
         }
 
         reg = repo.save(reg);
 
-        if (temAvisoPrevio && status == StatusEmbarque.EMBARCADO) {
-            aviso.setUtilizado(true);
-            aviso.setUtilizadoEm(OffsetDateTime.now());
-            colabFormRepo.save(aviso);
+        return toResponse(reg);
+    }
+
+    public String montarMensagemEmbarquesInvalidosSemanaAtual() {
+        ZoneId zone = ZoneId.of("America/Sao_Paulo");
+
+        LocalDate hoje = LocalDate.now(zone);
+        LocalDate inicioSemana = hoje.with(DayOfWeek.MONDAY);
+        LocalDate fimSemana = inicioSemana.plusDays(7);
+
+        OffsetDateTime inicio = inicioSemana.atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime fim = fimSemana.atStartOfDay(zone).toOffsetDateTime();
+
+        long totalInvalidos = repo.contarEmbarquesInvalidosPorPeriodo(inicio, fim);
+
+        if (totalInvalidos == 0) {
+            return "Nenhum embarque inválido foi registrado nesta semana.";
         }
 
-        return toResponse(reg);
+        return "Nesta semana, foram registrados " + totalInvalidos + " embarques inválidos.";
     }
 
     private MetodoValidacao parseMetodo(String raw) {
