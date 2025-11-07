@@ -32,12 +32,14 @@ public class PontoServiceImpl implements PontoService {
     }
 
     @Override
+    @Transactional
     public Pontos criar(PontosRequestDTO dto) {
-        var cidade = cidadeRepository.findById(dto.idCidade())
+        Cidade cidade = cidadeRepository.findById(dto.idCidade())
                 .orElseThrow(() -> new EntityNotFoundException("Cidade não encontrada"));
 
-        var nome = dto.nome().trim();
-        var p = new Pontos();
+        String nome = dto.nome() != null ? dto.nome().trim() : null;
+
+        Pontos p = new Pontos();
         p.setCidade(cidade);
         p.setNome(nome);
         p.setEndereco(dto.endereco());
@@ -50,7 +52,7 @@ public class PontoServiceImpl implements PontoService {
     @Override
     @Transactional
     public Pontos atualizar(Integer id, PontosRequestDTO dto) {
-        var p = buscar(id);
+        Pontos p = buscar(id);
 
         if (!p.getCidade().getIdCidade().equals(dto.idCidade())) {
             Cidade cidade = cidadeRepository.findById(dto.idCidade())
@@ -58,7 +60,7 @@ public class PontoServiceImpl implements PontoService {
             p.setCidade(cidade);
         }
 
-        var nome = dto.nome().trim();
+        String nome = dto.nome() != null ? dto.nome().trim() : null;
         p.setNome(nome);
         p.setEndereco(dto.endereco());
         p.setLatitude(dto.latitude());
@@ -71,7 +73,7 @@ public class PontoServiceImpl implements PontoService {
     @Transactional
     public void excluir (Integer id){
         if (!repository.existsById(id)){
-            throw  new EntityNotFoundException("Ponto não encontrado");
+            throw new EntityNotFoundException("Ponto não encontrado");
         }
         repository.deleteById(id);
     }

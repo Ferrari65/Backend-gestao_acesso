@@ -1,6 +1,8 @@
 package com.controller;
 
 import com.domain.user.Enum.Periodo;
+import com.domain.user.endereco.Pontos;
+import com.services.IAService.pontos.PontoIaAutomationService;
 import com.services.impl.RegistroEmbarqueServiceImpl;
 import com.services.impl.RotaServiceImpl;
 import com.services.rag.TrackPassRagService;
@@ -18,6 +20,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class ChatController {
 
+    private final PontoIaAutomationService pontoIaAutomationService;
     private final ChatModel chatModel;
     private final TrackPassRagService ragService;
     private final RotaServiceImpl rotaService;
@@ -35,7 +38,32 @@ public class ChatController {
 
         String lower = mensagem.toLowerCase();
 
-        // -------------------- ROTAS --------------------
+        // -------------------- CRIAR PONTO (IA + GEOCODING) --------------------
+        boolean ehCriarPonto =
+                lower.contains("criar ponto") ||
+                        lower.contains("cadastrar ponto") ||
+                        lower.contains("adicionar ponto") ||
+                        lower.contains("novo ponto");
+
+        if (ehCriarPonto) {
+            try {
+                Pontos ponto = pontoIaAutomationService.criarPontoAPartirDeTexto(mensagem);
+
+                String nomePonto = ponto.getNome();
+                String endereco = ponto.getEndereco();
+                String nomeCidade = ponto.getCidade() != null
+                        ? ponto.getCidade().getNome()
+                        : "cidade não informada";
+
+                // Resposta amigável para o usuário, sem detalhes técnicos
+                return "Ponto \"" + nomePonto + "\" criado com sucesso em "
+                        + nomeCidade + ", no endereço " + endereco + ".";
+            } catch (Exception e) {
+                return "Tive um problema ao tentar criar o ponto. Confira os dados e tente novamente, por favor.";
+            }
+        }
+
+        // -------------------- ROTAS INFORMAÇÕES --------------------
         if (lower.contains("rota")) {
 
             if (lower.contains("ativa")) {
@@ -100,13 +128,13 @@ public class ChatController {
 
                 if (nomeRota == null || periodo == null || idCidade == null) {
                     return """
-                Para essa consulta, preciso que você informe:
-                - Nome da rota (ex: "rota A")
-                - Período (manhã, tarde ou noite)
-                - Cidade com o id entre parênteses (ex: "São Joaquim da Barra (3)")
-                Exemplo completo:
-                "Quem ainda não embarcou na rota A do período da manhã em São Joaquim da Barra (3)?"
-                """;
+                    Para essa consulta, preciso que você informe:
+                    - Nome da rota (ex: "rota A")
+                    - Período (manhã, tarde ou noite)
+                    - Cidade com o código entre parênteses (ex: "São Joaquim da Barra (3)")
+                    Exemplo completo:
+                    "Quem ainda não embarcou na rota A do período da manhã em São Joaquim da Barra (3)?"
+                    """;
                 }
 
                 var naoEmbarcados = consultaEmbarqueService
@@ -115,8 +143,7 @@ public class ChatController {
                 if (naoEmbarcados.isEmpty()) {
                     return "Todos os colaboradores da rota " + nomeRota
                             + ", período " + periodo
-                            + ", em cidade " + idCidade
-                            + " já embarcaram hoje.";
+                            + ", na cidade informada já embarcaram hoje.";
                 }
 
                 StringBuilder sb = new StringBuilder();
@@ -124,9 +151,7 @@ public class ChatController {
                         .append(nomeRota)
                         .append(", período ")
                         .append(periodo)
-                        .append(", em cidade de id ")
-                        .append(idCidade)
-                        .append(" são:\n");
+                        .append(", na cidade informada são:\n");
 
                 naoEmbarcados.forEach(colab -> {
                     sb.append("- ")
@@ -144,19 +169,21 @@ public class ChatController {
         // -------------------- RESPOSTAS GERAIS --------------------
         String prompt = """
             Você é um assistente do sistema TrackPass de gestão de acesso corporativo.
-            Sempre seja cordial, diga "Olá" quando te disserem "Olá".
-            Responda "Bom dia" APENAS quando te mandarem "bom dia",
-            "Boa tarde" APENAS quando te mandarem "boa tarde",
-            e "Boa noite" APENAS quando te mandarem "boa noite".
-            
-            Fora isso, responda apenas perguntas relacionadas ao sistema TrackPass:
+
+            Sempre seja cordial.
+            Diga Olá quando o usuário disser Olá.
+            Responda Bom dia apenas quando o usuário disser Bom dia,
+            Boa tarde apenas quando disser Boa tarde
+            e Boa noite apenas quando disser Boa noite.
+
+            Responda apenas perguntas relacionadas ao sistema TrackPass, como:
             - embarques
             - rotas
             - viagens
             - registros de acesso
             - portaria
-            
-            Se a pergunta não for sobre o sistema TrackPass, diga:
+
+            Se a pergunta não for sobre o sistema TrackPass, responda:
             "Desculpe, só posso responder sobre o sistema TrackPass de gestão de acesso."
             """;
 
@@ -192,11 +219,10 @@ public class ChatController {
     }
 
     private String extrairNomeRota(String texto) {
-        // Ex: "rota A", "rota B1"
         Matcher m = Pattern.compile("rota\\s+([A-Za-z0-9]+)", Pattern.CASE_INSENSITIVE)
                 .matcher(texto);
         if (m.find()) {
-            return m.group(1); // "A", "B1", etc.
+            return m.group(1);
         }
         return null;
     }
@@ -217,7 +243,6 @@ public class ChatController {
     }
 
     private Integer extrairIdCidade(String texto) {
-        // Procura um número entre parênteses: (3), (15), etc.
         Matcher m = Pattern.compile("\\((\\d+)\\)").matcher(texto);
         if (m.find()) {
             return Integer.valueOf(m.group(1));
