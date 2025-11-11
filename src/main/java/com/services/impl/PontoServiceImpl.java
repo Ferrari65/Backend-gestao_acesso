@@ -38,11 +38,38 @@ public class PontoServiceImpl implements PontoService {
                 .orElseThrow(() -> new EntityNotFoundException("Cidade não encontrada"));
 
         String nome = dto.nome() != null ? dto.nome().trim() : null;
+        if (nome == null || nome.isBlank()) {
+            throw new IllegalArgumentException("Nome do ponto é obrigatório.");
+        }
+
+        String endereco = dto.endereco() != null ? dto.endereco().trim() : null;
+        if (endereco == null || endereco.isBlank()) {
+            throw new IllegalArgumentException("Endereço é obrigatório.");
+        }
+
+        String lowerEndereco = endereco.toLowerCase();
+
+        if (endereco.contains(",,") || endereco.contains(", ,")) {
+            throw new IllegalArgumentException("Endereço inválido. Está incompleto (contém vírgulas sem informação).");
+        }
+
+        if (lowerEndereco.matches(".*\\b0\\b.*")) {
+            throw new IllegalArgumentException("Endereço inválido. Número '0' não é aceito.");
+        }
+        if (!lowerEndereco.matches(".*\\d+.*")) {
+            throw new IllegalArgumentException("Endereço inválido. Informe também o número (ex: '250').");
+        }
+
+        if (!lowerEndereco.contains(cidade.getNome().toLowerCase())) {
+            throw new IllegalArgumentException(
+                    "Endereço inválido. O endereço deve conter o nome da cidade \"" + cidade.getNome() + "\"."
+            );
+        }
 
         Pontos p = new Pontos();
         p.setCidade(cidade);
         p.setNome(nome);
-        p.setEndereco(dto.endereco());
+        p.setEndereco(endereco);
         p.setLatitude(dto.latitude());
         p.setLongitude(dto.longitude());
 
@@ -61,8 +88,37 @@ public class PontoServiceImpl implements PontoService {
         }
 
         String nome = dto.nome() != null ? dto.nome().trim() : null;
+        if (nome == null || nome.isBlank()) {
+            throw new IllegalArgumentException("Nome do ponto é obrigatório.");
+        }
+
+        String endereco = dto.endereco() != null ? dto.endereco().trim() : null;
+        if (endereco == null || endereco.isBlank()) {
+            throw new IllegalArgumentException("Endereço é obrigatório.");
+        }
+
+        String lowerEndereco = endereco.toLowerCase();
+
+        if (endereco.contains(",,") || endereco.contains(", ,")) {
+            throw new IllegalArgumentException("Endereço inválido. Está incompleto (contém vírgulas sem informação).");
+        }
+
+        if (lowerEndereco.matches(".*\\b0\\b.*")) {
+            throw new IllegalArgumentException("Endereço inválido. Número '0' não é aceito.");
+        }
+
+        if (!lowerEndereco.matches(".*\\d+.*")) {
+            throw new IllegalArgumentException("Endereço inválido. Informe também o número (ex: '250').");
+        }
+
+        if (!lowerEndereco.contains(p.getCidade().getNome().toLowerCase())) {
+            throw new IllegalArgumentException(
+                    "Endereço inválido. O endereço deve conter o nome da cidade \"" + p.getCidade().getNome() + "\"."
+            );
+        }
+
         p.setNome(nome);
-        p.setEndereco(dto.endereco());
+        p.setEndereco(endereco);
         p.setLatitude(dto.latitude());
         p.setLongitude(dto.longitude());
 

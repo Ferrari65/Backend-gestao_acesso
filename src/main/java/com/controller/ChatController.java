@@ -8,6 +8,8 @@ import com.services.impl.RotaServiceImpl;
 import com.services.rag.TrackPassRagService;
 import com.services.registroEmbarque.ConsultaEmbarqueService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,8 @@ import java.util.regex.Pattern;
 @RequestMapping("/chat")
 @RequiredArgsConstructor
 public class ChatController {
+
+    private static final Logger log = LoggerFactory.getLogger(ChatController.class);
 
     private final PontoIaAutomationService pontoIaAutomationService;
     private final ChatModel chatModel;
@@ -38,7 +42,7 @@ public class ChatController {
 
         String lower = mensagem.toLowerCase();
 
-        // -------------------- CRIAR PONTO (IA + GEOCODING) --------------------
+        // -------------------- CRIAR PONTO --------------------
         boolean ehCriarPonto =
                 lower.contains("criar ponto") ||
                         lower.contains("cadastrar ponto") ||
@@ -55,14 +59,16 @@ public class ChatController {
                         ? ponto.getCidade().getNome()
                         : "cidade não informada";
 
-                // Resposta amigável para o usuário, sem detalhes técnicos
                 return "Ponto \"" + nomePonto + "\" criado com sucesso em "
                         + nomeCidade + ", no endereço " + endereco + ".";
+            } catch (IllegalArgumentException e) {
+                return "Não consegui criar o ponto porque o endereço parece incompleto ou genérico. " +
+                        "Informe rua, número e cidade. Exemplo: " +
+                        "\"criar ponto chamado Ponto da escola na Rua São José, 250, São Joaquim da Barra - SP, Brasil\".";
             } catch (Exception e) {
-                return "Tive um problema ao tentar criar o ponto. Confira os dados e tente novamente, por favor.";
+                return "Tive um problema técnico ao tentar criar o ponto. Tente novamente mais tarde ou contate o suporte.";
             }
         }
-
         // -------------------- ROTAS INFORMAÇÕES --------------------
         if (lower.contains("rota")) {
 
