@@ -5,6 +5,7 @@ import com.domain.user.Rotas.Rota;
 import com.domain.user.Rotas.RotaPonto;
 import com.domain.user.endereco.Pontos;
 import com.dto.IA.rota.RotaComMaisEmbarquesHojeDTO;
+import com.dto.IA.rota.RotaIARequestDTO;
 import com.dto.PATCH.RotaPatchDTO;
 import com.dto.localizacao.Rota.*;
 import com.projection.RotaComMaisColaboradoresProjection;
@@ -39,6 +40,42 @@ public class RotaServiceImpl implements RotaService {
     private final RotaPontoRepository rotaPontoRepo;
     private final RotaColaboradorRepository rotaColabRepo;
     private final RegistroEmbarqueRepository regEmbarqueRepo;
+
+
+    @Transactional
+    public Rota criarBasico(RotaIARequestDTO dto) {
+
+        Integer idCidade = dto.idCidade();
+        if (idCidade == null && dto.cidadeNome() != null && !dto.cidadeNome().isBlank()) {
+            var cidadeEncontrada = cidadeRepo
+                    .findByNomeIgnoreCase(dto.cidadeNome().trim())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Cidade não encontrada com nome: " + dto.cidadeNome()
+                    ));
+            idCidade = cidadeEncontrada.getIdCidade();
+        }
+
+        var cidade = cidadeRepo.findById(idCidade)
+                .orElseThrow(() -> new EntityNotFoundException("Cidade não encontrada"));
+
+        var nome = dto.nome().trim().toUpperCase();
+
+        if (rotaRepo.existsByCidade_IdCidadeAndNomeIgnoreCaseAndPeriodo(
+                idCidade, nome, dto.periodo())) {
+            throw conflito("Já existe uma rota com este nome e período nesta cidade");
+        }
+
+        Rota rota = new Rota();
+        rota.setCidade(cidade);
+        rota.setNome(nome);
+        rota.setPeriodo(dto.periodo());
+        rota.setCapacidade(dto.capacidade());
+        rota.setAtivo(Boolean.TRUE.equals(dto.ativo()));
+        rota.setHoraPartida(dto.horaPartida());   // ⬅ usa o que veio da IA
+        rota.setHoraChegada(dto.horaChegada());   // ⬅ idem
+
+        return rotaRepo.save(rota);
+    }
 
     @Override
     public List<Rota> listar() {

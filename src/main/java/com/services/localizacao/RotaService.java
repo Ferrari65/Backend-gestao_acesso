@@ -1,6 +1,7 @@
 package com.services.localizacao;
 
 import com.domain.user.Rotas.Rota;
+import com.dto.IA.rota.RotaIARequestDTO;
 import com.dto.PATCH.RotaPatchDTO;
 import com.dto.localizacao.Rota.RotaRequestDTO;
 
@@ -14,4 +15,6 @@ public interface RotaService {
     Rota atualizar(Integer idRota, RotaRequestDTO dto);
     Rota patch(Integer idRota, RotaPatchDTO dto);
     void deletar(Integer idRota);
+
+    Rota criarBasico(RotaIARequestDTO dto);
 }

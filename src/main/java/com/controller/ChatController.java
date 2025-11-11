@@ -1,7 +1,10 @@
 package com.controller;
 
 import com.domain.user.Enum.Periodo;
+import com.domain.user.Rotas.Rota;
 import com.domain.user.endereco.Pontos;
+import com.dto.IA.rota.RotaIARequestDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.IAService.pontos.PontoIaAutomationService;
 import com.services.impl.RegistroEmbarqueServiceImpl;
 import com.services.impl.RotaServiceImpl;
@@ -30,6 +33,58 @@ public class ChatController {
     private final RotaServiceImpl rotaService;
     private final RegistroEmbarqueServiceImpl registroEmbarqueService;
     private final ConsultaEmbarqueService consultaEmbarqueService;
+    private final ObjectMapper objectMapper;
+
+    private static final String SYSTEM_PROMPT_ROTA_IA = """
+Você é um assistente do sistema TrackPass.
+
+Sua tarefa é:
+Receber uma descrição em linguagem natural de uma rota de ônibus e retornar APENAS um JSON válido, sem explicações, exatamente no seguinte formato:
+
+{
+  "idCidade": null,
+  "cidadeNome": null,
+  "nome": "",
+  "periodo": null,
+  "capacidade": null,
+  "ativo": true,
+  "horaPartida": null,
+  "horaChegada": null
+}
+
+REGRAS IMPORTANTES:
+
+1) Não invente informações.
+- Use APENAS os dados que o usuário mencionar.
+- Se o usuário não falar um campo, preencha com null, exceto "ativo", que pode ser true por padrão.
+- NUNCA use o horário atual do sistema. Se o usuário não disser um horário, deixe o campo como null.
+
+2) Campos de cidade:
+- Se o usuário informar um código de cidade (ex.: "cidade 3" ou "(3)"), preencha "idCidade" com esse número e deixe "cidadeNome" null.
+- Se o usuário informar apenas o nome da cidade (ex.: "São Joaquim da Barra"), preencha "cidadeNome" com o texto exato e deixe "idCidade" como null.
+
+3) Demais campos:
+- "nome": nome exato da rota (ex.: "Rota T").
+- "periodo": converta o que o usuário disser para um destes valores EXATOS:
+  - "MANHA", "TARDE", "NOITE", "MADRUGADA"
+  Exemplos:
+  - "manhã", "de manhã" → "MANHA"
+  - "tarde", "à tarde" → "TARDE"
+  - "noite", "à noite", "noturno" → "NOITE"
+  - "madrugada" → "MADRUGADA"
+  Se o usuário não falar nada sobre período, use null.
+
+- "capacidade": número de lugares, se o usuário informar (ex.: 44). Senão, null.
+- "ativo": use o valor dito pelo usuário ("ativa", "inativa"). Se não falar nada, use true.
+- "horaPartida": se o usuário informar (ex.: "7:10", "07h10"), converta para "HH:mm". Se não informar, use null.
+- "horaChegada": idem, converta para "HH:mm" se informado, senão null.
+
+4) Não inclua campos de pontos ou trajeto.
+
+5) Resposta:
+- Responda sempre SOMENTE com o JSON.
+- Não escreva explicações, texto extra, comentários ou frases fora do JSON.
+""";
 
     @PostMapping("/alimentacao")
     public String indexar(@RequestBody List<String> textos) {
@@ -66,10 +121,68 @@ public class ChatController {
                         "Informe rua, número e cidade. Exemplo: " +
                         "\"criar ponto chamado Ponto da escola na Rua São José, 250, São Joaquim da Barra - SP, Brasil\".";
             } catch (Exception e) {
+                log.error("Erro ao criar ponto via IA", e);
                 return "Tive um problema técnico ao tentar criar o ponto. Tente novamente mais tarde ou contate o suporte.";
             }
         }
-        // -------------------- ROTAS INFORMAÇÕES --------------------
+
+        // -------------------- CRIAR ROTA COM IA  --------------------
+        boolean ehCriarRota =
+                lower.contains("rota") && (
+                        lower.contains("criar") ||
+                                lower.contains("cadastrar") ||
+                                lower.contains("nova") ||
+                                lower.contains("montar") ||
+                                lower.contains("configurar")
+                );
+
+        if (ehCriarRota) {
+            try {
+                String respostaJson = chatModel.call(
+                        SYSTEM_PROMPT_ROTA_IA + "\n\nUsuário: " + mensagem
+                );
+
+
+                RotaIARequestDTO dto = objectMapper.readValue(respostaJson, RotaIARequestDTO.class);
+                Rota rota = rotaService.criarBasico(dto);
+                String nomeCidade = rota.getCidade() != null
+                        ? rota.getCidade().getNome()
+                        : "cidade não informada";
+
+                String periodoTexto = rota.getPeriodo() != null
+                        ? rota.getPeriodo().name().toLowerCase()
+                        : "período não informado";
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("Rota \"")
+                        .append(rota.getNome())
+                        .append("\" criada com sucesso em ")
+                        .append(nomeCidade)
+                        .append(", período ")
+                        .append(periodoTexto);
+
+                if (rota.getHoraPartida() != null) {
+                    sb.append(", saída às ").append(rota.getHoraPartida());
+                }
+                if (rota.getHoraChegada() != null) {
+                    sb.append(", chegada às ").append(rota.getHoraChegada());
+                }
+                if (rota.getCapacidade() != null) {
+                    sb.append(", capacidade de ").append(rota.getCapacidade()).append(" lugares");
+                }
+
+                sb.append(".");
+
+                return sb.toString();
+
+            } catch (Exception e) {
+                log.error("Erro ao criar rota via IA", e);
+                return "Tive um problema ao tentar criar a rota com base na sua mensagem. " +
+                        "Confira se você informou cidade, nome, período, horários e capacidade, e tente novamente.";
+            }
+        }
+
+        // -------------------- ROTAS  --------------------
         if (lower.contains("rota")) {
 
             if (lower.contains("ativa")) {
@@ -195,6 +308,8 @@ public class ChatController {
 
         return chatModel.call(prompt + "\n\nPergunta: " + mensagem);
     }
+
+    // -------------------- HELPERS --------------------
 
     private String extrairNomeCompletoDaRota(String mensagemOriginal) {
         var pattern = Pattern.compile("(rota\\s+[\\p{L}\\p{N}_-]+)", Pattern.CASE_INSENSITIVE);
