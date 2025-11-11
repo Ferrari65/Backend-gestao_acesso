@@ -30,10 +30,11 @@ public class RotaColaboradorService {
     public RotaColaboradorResponse atribuir(Integer idRota, UUID idColaborador, Integer idPonto) {
         var rota = rotaRepo.findById(idRota)
                 .orElseThrow(() -> new NoSuchElementException("Rota não encontrada"));
+
         var user = userRepo.findById(idColaborador)
                 .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
 
-        Boolean ativo = (user.getAtivo());
+        Boolean ativo = user.getAtivo();
         if (ativo == null || !ativo) {
             throw new RegraNegocioException("COLABORADOR_INATIVO", "Colaborador precisa estar ativo.");
         }
@@ -52,8 +53,14 @@ public class RotaColaboradorService {
                         .orElseThrow(() -> new NoSuchElementException("Ponto não encontrado"));
                 existente.setPontos(ponto); // dirty checking
             }
+
             return new RotaColaboradorResponse(
-                    idRota, idColaborador, user.getNome(),
+                    rota.getIdRota(),
+                    rota.getNome(), // ajuste se o nome for outro
+                    existente.getPontos() != null ? existente.getPontos().getNome() : null,
+                    user.getIdColaborador(),
+                    user.getNome(),
+                    user.getMatricula(),
                     existente.getDataUso(),
                     existente.getPontos() != null ? existente.getPontos().getIdPonto() : null
             );
@@ -63,15 +70,22 @@ public class RotaColaboradorService {
         rc.setId(new RotaColaboradorId(idColaborador, idRota));
         rc.setRota(rota);
         rc.setColaborador(user);
+
         if (idPonto != null) {
             var ponto = pontosRepo.findById(idPonto)
                     .orElseThrow(() -> new NoSuchElementException("Ponto não encontrado"));
             rc.setPontos(ponto);
         }
+
         rotaColabRepo.save(rc);
 
         return new RotaColaboradorResponse(
-                idRota, idColaborador, user.getNome(),
+                rota.getIdRota(),
+                rota.getNome(),
+                rc.getPontos() != null ? rc.getPontos().getNome() : null,
+                user.getIdColaborador(),
+                user.getNome(),
+                user.getMatricula(),
                 rc.getDataUso(),
                 rc.getPontos() != null ? rc.getPontos().getIdPonto() : null
         );
@@ -85,8 +99,11 @@ public class RotaColaboradorService {
         return rotaColabRepo.findByRota_IdRota(idRota).stream()
                 .map(rc -> new RotaColaboradorResponse(
                         rota.getIdRota(),
+                        rota.getNome(),
+                        rc.getPontos() != null ? rc.getPontos().getNome() : null,
                         rc.getColaborador().getIdColaborador(),
                         rc.getColaborador().getNome(),
+                        rc.getColaborador().getMatricula(),
                         rc.getDataUso(),
                         rc.getPontos() != null ? rc.getPontos().getIdPonto() : null
                 ))
@@ -101,8 +118,11 @@ public class RotaColaboradorService {
         return rotaColabRepo.findByColaborador_IdColaborador(idColaborador).stream()
                 .map(rc -> new RotaColaboradorResponse(
                         rc.getRota().getIdRota(),
+                        rc.getRota().getNome(),
+                        rc.getPontos() != null ? rc.getPontos().getNome() : null,
                         user.getIdColaborador(),
                         user.getNome(),
+                        user.getMatricula(),
                         rc.getDataUso(),
                         rc.getPontos() != null ? rc.getPontos().getIdPonto() : null
                 ))
@@ -118,8 +138,11 @@ public class RotaColaboradorService {
                 .findFirstByColaborador_IdColaboradorOrderByDataUsoDesc(idColaborador)
                 .map(rc -> new RotaColaboradorResponse(
                         rc.getRota().getIdRota(),
+                        rc.getRota().getNome(),
+                        rc.getPontos() != null ? rc.getPontos().getNome() : null,
                         user.getIdColaborador(),
                         user.getNome(),
+                        user.getMatricula(),
                         rc.getDataUso(),
                         rc.getPontos() != null ? rc.getPontos().getIdPonto() : null
                 ));
