@@ -42,7 +42,7 @@ public class ImpedimentoService {
                 .severidade(req.severidade() != null ? req.severidade() : SeveridadeImpedimento.MEDIA)
                 .descricao(req.descricao())
                 .idViagem(req.idViagem())
-                .ocorridoEm(req.ocorridoEm())
+                .ocorridoEm(OffsetDateTime.now())
                 .registradoPor(req.registradoPor())
                 .ativo(true)
                 .build();

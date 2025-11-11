@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,13 +24,13 @@ public class ImpedimentoController {
 
     private final ImpedimentoService service;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @Operation(
             summary = "Registrar um novo impedimento",
             description = """
-                    Cria um novo impedimento vinculado a uma viagem.
-                    Os campos <b>motivo</b> e <b>severidade</b> são enums e aparecem como dropdown no Swagger UI.
-                    """
+                Cria um novo impedimento vinculado a uma viagem.
+                Os campos <b>motivo</b> e <b>severidade</b> são enums e aparecem como dropdown no Swagger UI.
+                """
     )
     public ResponseEntity<ImpedimentoResponse> criar(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
