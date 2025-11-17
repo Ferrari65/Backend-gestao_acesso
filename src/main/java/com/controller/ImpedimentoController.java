@@ -24,15 +24,14 @@ import java.util.UUID;
 public class ImpedimentoController {
 
     private final ImpedimentoService service;
-
-    @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    @PreAuthorize("hasAnyRole('COLABORADOR,LIDER')")
+    @PreAuthorize("hasAnyRole('COLABORADOR','LIDER')")
+    @PostMapping
     @Operation(
             summary = "Registrar um novo impedimento",
             description = """
-                Cria um novo impedimento vinculado a uma viagem.
-                Os campos <b>motivo</b> e <b>severidade</b> são enums e aparecem como dropdown no Swagger UI.
-                """
+            Cria um novo impedimento vinculado a uma viagem.
+            Os campos <b>motivo</b> e <b>severidade</b> são enums e aparecem como dropdown no Swagger UI.
+            """
     )
     public ResponseEntity<ImpedimentoResponse> criar(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -42,7 +41,7 @@ public class ImpedimentoController {
     ) {
         var resp = service.criar(req);
         return ResponseEntity
-                .created(URI.create("/api/impedimentos/" + resp.id()))
+                .created(URI.create("/impedimentos/" + resp.id()))
                 .body(resp);
     }
 

@@ -86,6 +86,8 @@ REGRAS IMPORTANTES:
 5) Resposta:
 - Responda sempre SOMENTE com o JSON.
 - Não escreva explicações, texto extra, comentários ou frases fora do JSON.
+
+6) caso o usuario pergunte como criar uma rota, mande um exemplo de frase para ele:
 """;
 
     // ---------------- PROMPT PARA ATRIBUIR PONTO À ROTA ----------------
@@ -233,7 +235,7 @@ Resposta:
         // -------------------- AJUDA: COMO CRIAR UMA ROTA --------------------
         boolean ehPerguntaComoCriarRota =
                 (lower.contains("como criar uma rota")) ||
-                        (lower.contains("como criar rota")) ||
+                        (lower.contains("como faço para criar rota")) ||
                         (lower.contains("como faço") && lower.contains("criar") && lower.contains("rota")) ||
                         (lower.contains("exemplo de rota")) ||
                         (lower.contains("exemplo rota")) ||
@@ -249,7 +251,7 @@ Você pode adaptar cidade, nome da rota, período, horários e quantidade de lug
 """;
         }
 
-        // -------------------- CRIAR ROTA COM IA  --------------------
+        // -------------------- CRIAR ROTA  --------------------
         boolean ehCriarRota =
                 lower.contains("rota") && (
                         lower.contains("criar") ||
