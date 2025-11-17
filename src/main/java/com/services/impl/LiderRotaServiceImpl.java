@@ -66,10 +66,12 @@ public class LiderRotaServiceImpl implements LiderRotaService {
                 if (existente.getDataAtribuicao() == null) {
                     existente.setDataAtribuicao(LocalDateTime.now());
                 }
+                liderRotaRepo.save(existente);
             }
             quando = existente.getDataAtribuicao();
         } else {
             var novo = new RotaLider();
+            // Usa a mesma ordem do seu construtor: (UUID idColaborador, Integer idRota)
             novo.setId(new LiderRotaId(idColaborador, idRota));
             novo.setRota(rota);
             novo.setColaborador(user);
@@ -123,7 +125,9 @@ public class LiderRotaServiceImpl implements LiderRotaService {
         if (lr.isAtivo()) {
             lr.setAtivo(false);
             lr.setDataInativacao(LocalDateTime.now());
+            liderRotaRepo.save(lr);
         }
+
         boolean aindaLider = liderRotaRepo.existsByColaborador_IdColaboradorAndAtivoTrue(idColaborador);
         if (!aindaLider) {
             var user = userRepo.findById(idColaborador)
