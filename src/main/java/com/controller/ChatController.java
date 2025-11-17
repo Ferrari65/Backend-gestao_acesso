@@ -230,6 +230,25 @@ Resposta:
             }
         }
 
+        // -------------------- AJUDA: COMO CRIAR UMA ROTA --------------------
+        boolean ehPerguntaComoCriarRota =
+                (lower.contains("como criar uma rota")) ||
+                        (lower.contains("como criar rota")) ||
+                        (lower.contains("como faço") && lower.contains("criar") && lower.contains("rota")) ||
+                        (lower.contains("exemplo de rota")) ||
+                        (lower.contains("exemplo rota")) ||
+                        (lower.contains("modelo de rota"));
+
+        if (ehPerguntaComoCriarRota) {
+            return """
+Para criar uma rota usando a IA, envie uma frase completa, por exemplo:
+
+"Quero criar uma rota em São Joaquim da Barra chamada Rota T, no período da manhã, rota ativa, saindo às 07:10 e chegando às 08:00, com 44 lugares."
+
+Você pode adaptar cidade, nome da rota, período, horários e quantidade de lugares conforme a sua necessidade.
+""";
+        }
+
         // -------------------- CRIAR ROTA COM IA  --------------------
         boolean ehCriarRota =
                 lower.contains("rota") && (
@@ -281,7 +300,8 @@ Resposta:
             } catch (Exception e) {
                 log.error("Erro ao criar rota via IA", e);
                 return "Tive um problema ao tentar criar a rota com base na sua mensagem. " +
-                        "Confira se você informou cidade, nome, período, horários e capacidade, e tente novamente.";
+                        "Confira se você informou os dados corretos e tente novamente." +
+                        " Exemplo: Quero criar uma rota em São Joaquim da Barra chamada Rota T, no período da manhã, rota ativa, saindo às 07:10 e chegando às 08:00, com 44 lugares.";
             }
         }
 
