@@ -6,5 +6,5 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public enum MotivoImpedimento {
     QUEBRA_ONIBUS,
     ACIDENTE,
-    OUTRO
+    SOCORRO_MEDICO
 }

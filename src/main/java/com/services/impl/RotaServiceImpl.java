@@ -4,6 +4,7 @@ import com.domain.user.Enum.Periodo;
 import com.domain.user.Rotas.Rota;
 import com.domain.user.Rotas.RotaPonto;
 import com.domain.user.endereco.Pontos;
+import com.dto.IA.ponto.CriarPontoIAResult;
 import com.dto.IA.rota.RotaComMaisEmbarquesHojeDTO;
 import com.dto.IA.rota.RotaIARequestDTO;
 import com.dto.PATCH.RotaPatchDTO;
@@ -71,8 +72,8 @@ public class RotaServiceImpl implements RotaService {
         rota.setPeriodo(dto.periodo());
         rota.setCapacidade(dto.capacidade());
         rota.setAtivo(Boolean.TRUE.equals(dto.ativo()));
-        rota.setHoraPartida(dto.horaPartida());   // ⬅ usa o que veio da IA
-        rota.setHoraChegada(dto.horaChegada());   // ⬅ idem
+        rota.setHoraPartida(dto.horaPartida());
+        rota.setHoraChegada(dto.horaChegada());
 
         return rotaRepo.save(rota);
     }
@@ -80,10 +81,6 @@ public class RotaServiceImpl implements RotaService {
     @Override
     public List<Rota> listar() {
         return rotaRepo.findAll();
-    }
-
-    public long contarRotas() {
-        return rotaRepo.count();
     }
 
     public long contarRotasAtivas() {
@@ -264,8 +261,6 @@ public class RotaServiceImpl implements RotaService {
         }
     }
 
-    // ------------ PATCH / CRUD  ------------
-
     @Override
     @Transactional
     public Rota patch(Integer idRota, RotaPatchDTO dto) {
@@ -314,6 +309,60 @@ public class RotaServiceImpl implements RotaService {
     public List<RotaPontoItemDTO> listarTrajeto(Integer idRota) {
         rotaRepo.findById(idRota).orElseThrow(() -> new EntityNotFoundException("Rota não encontrada"));
         return rotaPontoRepo.listarPontosDTO(idRota);
+    }
+
+    // ------------ atribuir ponto pela IA ------------
+
+    @Transactional
+    public Rota atribuirPontoPorNomes(CriarPontoIAResult cmd) {
+
+        if (cmd.nomeRota() == null || cmd.nomeRota().isBlank()) {
+            throw new IllegalArgumentException("Nome da rota é obrigatório");
+        }
+        if (cmd.nomePonto() == null || cmd.nomePonto().isBlank()) {
+            throw new IllegalArgumentException("Nome do ponto é obrigatório");
+        }
+        if (cmd.ordem() == null || cmd.ordem() <= 0) {
+            throw new IllegalArgumentException("A ordem deve ser um número inteiro > 0");
+        }
+
+        String nomeRotaNormalizado = cmd.nomeRota().trim().toUpperCase();
+
+        Rota rota = rotaRepo.findByNomeIgnoreCase(nomeRotaNormalizado)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Rota não encontrada com nome: " + cmd.nomeRota()
+                ));
+
+        Integer idCidade = rota.getCidade().getIdCidade();
+        Pontos ponto = pontoRepo
+                .findByNomeIgnoreCaseAndCidade_IdCidade(cmd.nomePonto().trim(), idCidade)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Ponto não encontrado com nome: " + cmd.nomePonto()
+                ));
+        List<RotaPontoItemRequestDTO> itens = rota.getPontos().stream()
+                .map(rp -> new RotaPontoItemRequestDTO(
+                        rp.getPonto().getIdPonto(),
+                        rp.getOrdem()
+                ))
+                .collect(Collectors.toList());
+
+        boolean jaExistia = itens.stream()
+                .anyMatch(it -> it.idPonto().equals(ponto.getIdPonto()));
+
+        if (jaExistia) {
+            itens = itens.stream()
+                    .map(it -> it.idPonto().equals(ponto.getIdPonto())
+                            ? new RotaPontoItemRequestDTO(ponto.getIdPonto(), cmd.ordem())
+                            : it
+                    )
+                    .collect(Collectors.toList());
+        } else {
+            itens.add(new RotaPontoItemRequestDTO(ponto.getIdPonto(), cmd.ordem()));
+        }
+        validarOrdemUnica(itens);
+        var mapaPontos = carregarEValidarPontos(idCidade, itens);
+        aplicarSequenciaInPlace(rota, itens, mapaPontos);
+        return rotaRepo.save(rota);
     }
 
     private void validarOrdemUnica(List<RotaPontoItemRequestDTO> itens) {

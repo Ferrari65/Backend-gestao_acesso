@@ -3,6 +3,7 @@ package com.controller;
 import com.domain.user.Enum.Periodo;
 import com.domain.user.Rotas.Rota;
 import com.domain.user.endereco.Pontos;
+import com.dto.IA.ponto.CriarPontoIAResult;
 import com.dto.IA.rota.RotaIARequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.services.IAService.pontos.PontoIaAutomationService;
@@ -35,6 +36,7 @@ public class ChatController {
     private final ConsultaEmbarqueService consultaEmbarqueService;
     private final ObjectMapper objectMapper;
 
+    // ---------------- PROMPT PARA CRIAR ROTA ----------------
     private static final String SYSTEM_PROMPT_ROTA_IA = """
 Você é um assistente do sistema TrackPass.
 
@@ -86,6 +88,51 @@ REGRAS IMPORTANTES:
 - Não escreva explicações, texto extra, comentários ou frases fora do JSON.
 """;
 
+    // ---------------- PROMPT PARA ATRIBUIR PONTO À ROTA ----------------
+    private static final String SYSTEM_PROMPT_ROTA_PONTO_IA = """
+Você é um assistente do sistema TrackPass.
+
+Sua tarefa é:
+Receber uma frase em linguagem natural onde o usuário quer ATRIBUIR um ponto a uma rota,
+informando nome da rota, nome do ponto e a ordem, e retornar APENAS um JSON válido no formato:
+
+{
+  "nomeRota": "",
+  "nomePonto": "",
+  "ordem": 1
+}
+
+REGRAS:
+
+1) "nomeRota":
+   - Deve ser o nome da rota mencionada na frase.
+   - Preserve o texto conforme o usuário disser, apenas remova espaços extras nas pontas.
+
+2) "nomePonto":
+   - Nome do ponto/parada mencionado na frase.
+
+3) "ordem":
+   - Deve ser um número inteiro correspondente à posição do ponto na rota (1, 2, 3, ...).
+   - Se o usuário disser "primeira parada", "primeiro ponto" → 1
+   - "segunda", "segundo" → 2; "terceira" → 3, etc.
+
+4) Se o usuário não informar algum dado essencial (nome da rota, nome do ponto ou ordem), coloque null no campo faltante.
+
+5) Resposta:
+   - Responda SEMPRE SOMENTE com o JSON.
+   - Não escreva explicações, comentários, texto antes ou depois do JSON.
+
+EXEMPLOS:
+
+Usuário: "Coloca o ponto Portaria Principal na Rota 01 Matutina como primeira parada"
+Resposta:
+{"nomeRota":"Rota 01 Matutina","nomePonto":"Portaria Principal","ordem":1}
+
+Usuário: "adiciona o ponto Jardim Aeroporto na rota 5 como terceiro ponto"
+Resposta:
+{"nomeRota":"rota 5","nomePonto":"Jardim Aeroporto","ordem":3}
+""";
+
     @PostMapping("/alimentacao")
     public String indexar(@RequestBody List<String> textos) {
         ragService.indexarDocumentosTrackPass(textos);
@@ -101,7 +148,7 @@ REGRAS IMPORTANTES:
         boolean ehCriarPonto =
                 lower.contains("criar ponto") ||
                         lower.contains("cadastrar ponto") ||
-                        lower.contains("adicionar ponto") ||
+                        (lower.contains("adicionar ponto") && !lower.contains("rota")) ||
                         lower.contains("novo ponto");
 
         if (ehCriarPonto) {
@@ -126,6 +173,63 @@ REGRAS IMPORTANTES:
             }
         }
 
+        // -------------------- ATRIBUIR PONTO A ROTA COM IA --------------------
+        boolean ehAtribuirPontoNaRota =
+                (lower.contains("atribuir ponto") && lower.contains("rota")) ||
+                        (lower.contains("colocar ponto") && lower.contains("rota")) ||
+                        (lower.contains("adicionar ponto") && lower.contains("rota")) ||
+                        (lower.contains("ponto") && lower.contains("rota") && lower.contains("ordem")) ||
+                        (lower.contains("ponto") && lower.contains("rota") && lower.contains("parada"));
+
+        if (ehAtribuirPontoNaRota) {
+            try {
+                String respostaJson = chatModel.call(
+                        SYSTEM_PROMPT_ROTA_PONTO_IA + "\n\nUsuário: " + mensagem
+                );
+
+                CriarPontoIAResult cmd =
+                        objectMapper.readValue(respostaJson, CriarPontoIAResult.class);
+
+                if (cmd.nomeRota() == null || cmd.nomePonto() == null || cmd.ordem() == null) {
+                    return """
+            Para atribuir um ponto a uma rota, preciso que você informe:
+            - Nome da rota
+            - Nome do ponto
+            - A ordem (posição) do ponto na rota
+
+            Exemplos:
+            - "Coloca o ponto Portaria Principal na rota Rota 01 Matutina como primeira parada"
+            - "Adiciona o ponto Jardim Aeroporto na rota Rota 05 Tarde como terceiro ponto"
+            """;
+                }
+
+                Rota rotaAtualizada = rotaService.atribuirPontoPorNomes(cmd);
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("Ponto \"")
+                        .append(cmd.nomePonto())
+                        .append("\" atribuído à rota \"")
+                        .append(rotaAtualizada.getNome())
+                        .append("\" na ordem ")
+                        .append(cmd.ordem())
+                        .append(".");
+
+                return sb.toString();
+
+            } catch (IllegalStateException e) {
+                return e.getMessage();
+            } catch (jakarta.persistence.EntityNotFoundException e) {
+
+                return e.getMessage()
+                        + "\n\nConfira se o nome da rota e do ponto existem no sistema. " +
+                        "Se precisar, peça a lista de pontos ou rotas cadastradas para o administrador.";
+            } catch (Exception e) {
+                log.error("Erro ao atribuir ponto à rota via IA", e);
+                return "Tive um problema ao tentar atribuir o ponto à rota com base na sua mensagem. " +
+                        "Tente informar: nome da rota, nome do ponto e a ordem (posição).";
+            }
+        }
+
         // -------------------- CRIAR ROTA COM IA  --------------------
         boolean ehCriarRota =
                 lower.contains("rota") && (
@@ -141,7 +245,6 @@ REGRAS IMPORTANTES:
                 String respostaJson = chatModel.call(
                         SYSTEM_PROMPT_ROTA_IA + "\n\nUsuário: " + mensagem
                 );
-
 
                 RotaIARequestDTO dto = objectMapper.readValue(respostaJson, RotaIARequestDTO.class);
                 Rota rota = rotaService.criarBasico(dto);

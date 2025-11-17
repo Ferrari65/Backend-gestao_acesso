@@ -21,6 +21,10 @@ public interface RotaRepository extends JpaRepository<Rota, Integer> {
     boolean existsByCidade_IdCidadeAndNomeIgnoreCaseAndPeriodoAndIdRotaNot(
             Integer idCidade, String nome, Periodo periodo, Integer idRota);
 
+    Optional<Rota> findByNomeIgnoreCase(String nome);
+
+    Optional<Rota> findByNomeIgnoreCaseAndPeriodo(String nome, Periodo periodo);
+
     @EntityGraph(attributePaths = {"cidade"})
     List<Rota> findAll();
 
