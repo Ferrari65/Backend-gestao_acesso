@@ -42,6 +42,11 @@ public class RotaServiceImpl implements RotaService {
     private final RotaColaboradorRepository rotaColabRepo;
     private final RegistroEmbarqueRepository regEmbarqueRepo;
 
+    private static final DateTimeFormatter FMT_HH_MM = DateTimeFormatter.ofPattern("HH:mm");
+
+    private LocalTime toLocalTime(String valor) {
+        return LocalTime.parse(valor, FMT_HH_MM);
+    }
 
     @Transactional
     public Rota criarBasico(RotaIARequestDTO dto) {
@@ -72,8 +77,13 @@ public class RotaServiceImpl implements RotaService {
         rota.setPeriodo(dto.periodo());
         rota.setCapacidade(dto.capacidade());
         rota.setAtivo(Boolean.TRUE.equals(dto.ativo()));
-        rota.setHoraPartida(dto.horaPartida());
-        rota.setHoraChegada(dto.horaChegada());
+
+        if (dto.horaPartida() != null && !dto.horaPartida().isBlank()) {
+            rota.setHoraPartida(toLocalTime(dto.horaPartida()));
+        }
+        if (dto.horaChegada() != null && !dto.horaChegada().isBlank()) {
+            rota.setHoraChegada(toLocalTime(dto.horaChegada()));
+        }
 
         return rotaRepo.save(rota);
     }
@@ -228,7 +238,6 @@ public class RotaServiceImpl implements RotaService {
         };
     }
 
-
     public RotaComMaisEmbarquesHojeDTO buscarRotaComMaisEmbarquesHoje() {
         LocalDate hoje = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
 
@@ -311,8 +320,6 @@ public class RotaServiceImpl implements RotaService {
         return rotaPontoRepo.listarPontosDTO(idRota);
     }
 
-    // ------------ atribuir ponto pela IA ------------
-
     @Transactional
     public Rota atribuirPontoPorNomes(CriarPontoIAResult cmd) {
 
@@ -375,12 +382,6 @@ public class RotaServiceImpl implements RotaService {
                 throw new IllegalArgumentException("Há ordens repetidas na sequência de pontos");
             }
         }
-    }
-
-    private static final DateTimeFormatter FMT_HH_MM = DateTimeFormatter.ofPattern("HH:mm");
-
-    private LocalTime toLocalTime(String valor) {
-        return LocalTime.parse(valor, FMT_HH_MM);
     }
 
     private Map<Integer, Pontos> carregarEValidarPontos(Integer idCidade, List<RotaPontoItemRequestDTO> itens) {

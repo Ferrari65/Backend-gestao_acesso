@@ -146,6 +146,39 @@ Resposta:
 
         String lower = mensagem.toLowerCase();
 
+        // -------------------- SAUDAÇÃO INICIAL + O QUE A IA FAZ --------------------
+        boolean ehSaudacaoSimples =
+                (lower.contains("oi") || lower.contains("olá") || lower.contains("ola")
+                        || lower.contains("bom dia") || lower.contains("boa tarde") || lower.contains("boa noite"))
+                        && !lower.contains("rota")
+                        && !lower.contains("ponto")
+                        && !lower.contains("embarque")
+                        && !lower.contains("lider")
+                        && !lower.contains("colaborador");
+
+        if (ehSaudacaoSimples) {
+            return """
+Olá! 👋 Eu sou a assistente de IA do TrackPass.
+
+Posso te ajudar com, por exemplo:
+🚌 Criar rotas a partir de uma frase em português.
+📍 Criar pontos de embarque a partir de um endereço.
+🔗 Atribuir pontos a uma rota na ordem correta.
+✅ Consultar rotas ativas e inativas.
+👥 Ver qual rota tem mais colaboradores ou mais embarques hoje.
+⚠️ Consultar embarques inválidos na semana.ultar embarques inválidos na semana.
+
+Alguns exemplos de coisas que você pode digitar:
+- "Quero criar uma rota em São Joaquim da Barra chamada Rota T, de manhã, saindo às 07:10 e chegando às 08:00, com 44 lugares."
+- "Criar ponto chamado Portaria Principal na Rua São José, 250, São Joaquim da Barra - SP."
+- "Coloca o ponto Ponto Tiradentes na rota Rota D como quarta parada."
+- "Quantos colaboradores estão na rota A de manhã?"
+- "Quem ainda não embarcou na rota A do período da manhã em São Joaquim da Barra (3)?"
+
+Me diga o que você quer fazer e eu tento ajudar. 🙂
+""";
+        }
+
         // -------------------- AJUDA: COMO CRIAR UM PONTO --------------------
         boolean ehPerguntaComoCriarPonto =
                 lower.contains("como criar um ponto") ||
@@ -216,6 +249,36 @@ Sempre tente informar: rua, número, cidade, estado e país para que o endereço
             }
         }
 
+        // -------------------- AJUDA: COMO ATRIBUIR PONTO À ROTA --------------------
+        boolean ehPerguntaComoAtribuirPontoNaRota =
+                (
+                        lower.contains("como atribuir") ||
+                                lower.contains("como colocar") ||
+                                lower.contains("como adicionar")
+                )
+                        && lower.contains("ponto")
+                        && lower.contains("rota");
+
+        if (ehPerguntaComoAtribuirPontoNaRota) {
+            return """
+Para atribuir um ponto a uma rota usando a IA, envie uma frase informando:
+
+- Nome do ponto
+- Nome da rota
+- A ordem (posição) do ponto na rota
+
+Por exemplo:
+"Coloca o ponto Ponto Tiradentes na rota Rota D como quarta parada."
+
+Outros exemplos:
+- "Adicionar o ponto Portaria Principal na rota Rota 01 Matutina como primeira parada."
+- "Coloca o ponto Jardim Aeroporto na rota Rota 05 Tarde como terceira parada."
+
+Você pode usar termos como "primeira parada", "segunda parada", "terceiro ponto", "quarta parada" etc. 
+A IA vai transformar isso em um número de ordem (1, 2, 3, 4...).
+""";
+        }
+
         // -------------------- ATRIBUIR PONTO A ROTA COM IA --------------------
         boolean ehAtribuirPontoNaRota =
                 (lower.contains("atribuir ponto") && lower.contains("rota")) ||
@@ -235,15 +298,15 @@ Sempre tente informar: rua, número, cidade, estado e país para que o endereço
 
                 if (cmd.nomeRota() == null || cmd.nomePonto() == null || cmd.ordem() == null) {
                     return """
-            Para atribuir um ponto a uma rota, preciso que você informe:
-            - Nome da rota
-            - Nome do ponto
-            - A ordem (posição) do ponto na rota
+Para atribuir um ponto a uma rota, preciso que você informe:
+- Nome da rota
+- Nome do ponto
+- A ordem (posição) do ponto na rota
 
-            Exemplos:
-            - "Coloca o ponto Portaria Principal na rota Rota 01 Matutina como primeira parada"
-            - "Adiciona o ponto Jardim Aeroporto na rota Rota 05 Tarde como terceiro ponto"
-            """;
+Exemplos:
+- "Coloca o ponto Portaria Principal na rota Rota 01 Matutina como primeira parada"
+- "Adiciona o ponto Jardim Aeroporto na rota Rota 05 Tarde como terceiro ponto"
+""";
                 }
 
                 Rota rotaAtualizada = rotaService.atribuirPontoPorNomes(cmd);

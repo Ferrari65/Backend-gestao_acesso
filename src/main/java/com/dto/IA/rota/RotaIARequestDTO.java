@@ -14,9 +14,9 @@ public record RotaIARequestDTO(
         Boolean ativo,
 
         @JsonFormat(pattern = "HH:mm")
-        LocalTime horaPartida,
+        String horaPartida,
 
         @JsonFormat(pattern = "HH:mm")
-        LocalTime horaChegada
+        String horaChegada
 
 ) {}
