@@ -8,6 +8,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -46,6 +47,12 @@ public class Impedimento {
 
     @Column(name = "registrado_por", nullable = false)
     private UUID registradoPor;
+
+    @Column(nullable = false, precision = 11, scale = 8 /*, columnDefinition = "NUMERIC(11,8)"*/)
+    private BigDecimal latitude;
+
+    @Column(nullable = false, precision = 11, scale = 8 /*, columnDefinition = "NUMERIC(11,8)"*/)
+    private BigDecimal longitude;
 
     @Column(name = "ativo", nullable = false)
     @ColumnDefault("true")

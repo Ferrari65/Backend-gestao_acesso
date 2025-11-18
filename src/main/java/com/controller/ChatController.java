@@ -146,12 +146,53 @@ Resposta:
 
         String lower = mensagem.toLowerCase();
 
+        // -------------------- AJUDA: COMO CRIAR UM PONTO --------------------
+        boolean ehPerguntaComoCriarPonto =
+                lower.contains("como criar um ponto") ||
+                        lower.contains("como criar ponto") ||
+                        lower.contains("como cadastrar um ponto") ||
+                        lower.contains("como cadastrar ponto") ||
+                        (lower.contains("como faço") && lower.contains("ponto") && (lower.contains("criar") || lower.contains("cadastrar") || lower.contains("registrar"))) ||
+                        lower.contains("exemplo de ponto") ||
+                        lower.contains("exemplo ponto") ||
+                        lower.contains("modelo de ponto") ||
+                        lower.contains("como registrar um ponto") ||
+                        lower.contains("como registrar ponto");
+
+        if (ehPerguntaComoCriarPonto) {
+            return """
+Para criar um ponto usando a IA, envie uma frase com o **nome do ponto** e o **endereço completo**, por exemplo:
+
+"Criar ponto chamado Portaria Principal na Rua São José, 250, São Joaquim da Barra - SP, Brasil."
+
+Outros exemplos que funcionam:
+- "Quero cadastrar um ponto chamado Ponto do Posto na Avenida Brasil, 1020, Orlândia - SP, Brasil."
+- "Cadastrar novo ponto Escola Municipal Pedro Álvares na Rua 7 de Setembro, 305, Ipuã - SP, Brasil."
+
+Sempre tente informar: rua, número, cidade, estado e país para que o endereço seja bem identificado.
+""";
+        }
+
         // -------------------- CRIAR PONTO --------------------
         boolean ehCriarPonto =
-                lower.contains("criar ponto") ||
-                        lower.contains("cadastrar ponto") ||
-                        (lower.contains("adicionar ponto") && !lower.contains("rota")) ||
-                        lower.contains("novo ponto");
+                (
+                        lower.contains("criar ponto") ||
+                                lower.contains("cadastrar ponto") ||
+                                lower.contains("registrar ponto") ||
+                                lower.contains("novo ponto") ||
+                                lower.contains("ponto novo") ||
+                                lower.contains("cadastrar novo ponto") ||
+                                lower.contains("criar novo ponto") ||
+                                lower.contains("ponto de embarque novo") ||
+                                lower.contains("novo ponto de embarque")
+                ) && !lower.contains("rota")
+                        ||
+                        (
+                                lower.contains("criar parada") ||
+                                        lower.contains("cadastrar parada") ||
+                                        lower.contains("nova parada") ||
+                                        lower.contains("parada nova")
+                        ) && !lower.contains("rota");
 
         if (ehCriarPonto) {
             try {
@@ -168,7 +209,7 @@ Resposta:
             } catch (IllegalArgumentException e) {
                 return "Não consegui criar o ponto porque o endereço parece incompleto ou genérico. " +
                         "Informe rua, número e cidade. Exemplo: " +
-                        "\"criar ponto chamado Ponto da escola na Rua São José, 250, São Joaquim da Barra - SP, Brasil\".";
+                        "\"Criar ponto chamado Ponto da escola na Rua São José, 250, São Joaquim da Barra - SP, Brasil\".";
             } catch (Exception e) {
                 log.error("Erro ao criar ponto via IA", e);
                 return "Tive um problema técnico ao tentar criar o ponto. Tente novamente mais tarde ou contate o suporte.";

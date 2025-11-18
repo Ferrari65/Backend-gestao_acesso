@@ -5,6 +5,7 @@ import com.domain.user.Enum.SeveridadeImpedimento;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -18,6 +19,8 @@ public record ImpedimentoCreateRequest (
         @Schema(description = "Severidade do impedimento")
         SeveridadeImpedimento severidade,
 
+        BigDecimal latitude,
+        BigDecimal longitude,
         String descricao,
         UUID idViagem,
         UUID registradoPor

@@ -82,6 +82,8 @@ public class ImpedimentoService {
                 e.getIdImpedimento(),
                 e.getMotivo(),
                 e.getSeveridade(),
+                e.getLatitude(),
+                e.getLongitude(),
                 e.getDescricao(),
                 e.getIdViagem(),
                 e.getOcorridoEm(),
