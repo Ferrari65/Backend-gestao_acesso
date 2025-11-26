@@ -34,29 +34,38 @@ public class RotaColaboradorService {
         var user = userRepo.findById(idColaborador)
                 .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
 
-        Boolean ativo = user.getAtivo();
-        if (ativo == null || !ativo) {
+        Boolean ativoUser = user.getAtivo();
+        if (ativoUser == null || !ativoUser) {
             throw new RegraNegocioException("COLABORADOR_INATIVO", "Colaborador precisa estar ativo.");
         }
 
         boolean jaEmOutraRota = rotaColabRepo
-                .existsByColaborador_IdColaboradorAndId_IdRotaNot(idColaborador, idRota);
-        if (jaEmOutraRota) {
-            throw new RegraNegocioException("COLABORADOR_JA_ATRIBUIDO",
-                    "Colaborador já está atribuído a outra rota.");
-        }
+                .existsByColaborador_IdColaboradorAndId_IdRotaNotAndAtivoTrue(idColaborador, idRota);
 
-        var existente = rotaColabRepo.findById_IdRotaAndId_IdColaborador(idRota, idColaborador).orElse(null);
-        if (existente != null) {
+        if (jaEmOutraRota) {
+            throw new RegraNegocioException(
+                    "COLABORADOR_JA_ATRIBUIDO",
+                    "Colaborador já está atribuído a outra rota."
+            );
+        }
+        var existenteOpt = rotaColabRepo.findById_IdRotaAndId_IdColaborador(idRota, idColaborador);
+
+        if (existenteOpt.isPresent()) {
+            var existente = existenteOpt.get();
+
+            if (Boolean.FALSE.equals(existente.getAtivo())) {
+                existente.setAtivo(true);
+            }
+
             if (idPonto != null) {
                 var ponto = pontosRepo.findById(idPonto)
                         .orElseThrow(() -> new NoSuchElementException("Ponto não encontrado"));
-                existente.setPontos(ponto); // dirty checking
+                existente.setPontos(ponto);
             }
 
             return new RotaColaboradorResponse(
                     rota.getIdRota(),
-                    rota.getNome(), // ajuste se o nome for outro
+                    rota.getNome(),
                     existente.getPontos() != null ? existente.getPontos().getNome() : null,
                     user.getIdColaborador(),
                     user.getNome(),
@@ -70,6 +79,7 @@ public class RotaColaboradorService {
         rc.setId(new RotaColaboradorId(idColaborador, idRota));
         rc.setRota(rota);
         rc.setColaborador(user);
+        rc.setAtivo(true);
 
         if (idPonto != null) {
             var ponto = pontosRepo.findById(idPonto)
@@ -96,7 +106,7 @@ public class RotaColaboradorService {
         var rota = rotaRepo.findById(idRota)
                 .orElseThrow(() -> new NoSuchElementException("Rota não encontrada"));
 
-        return rotaColabRepo.findByRota_IdRota(idRota).stream()
+        return rotaColabRepo.findByRota_IdRotaAndAtivoTrue(idRota).stream()
                 .map(rc -> new RotaColaboradorResponse(
                         rota.getIdRota(),
                         rota.getNome(),
@@ -115,7 +125,7 @@ public class RotaColaboradorService {
         var user = userRepo.findById(idColaborador)
                 .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
 
-        return rotaColabRepo.findByColaborador_IdColaborador(idColaborador).stream()
+        return rotaColabRepo.findByColaborador_IdColaboradorAndAtivoTrue(idColaborador).stream()
                 .map(rc -> new RotaColaboradorResponse(
                         rc.getRota().getIdRota(),
                         rc.getRota().getNome(),
@@ -135,7 +145,7 @@ public class RotaColaboradorService {
                 .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
 
         return rotaColabRepo
-                .findFirstByColaborador_IdColaboradorOrderByDataUsoDesc(idColaborador)
+                .findFirstByColaborador_IdColaboradorAndAtivoTrueOrderByDataUsoDesc(idColaborador)
                 .map(rc -> new RotaColaboradorResponse(
                         rc.getRota().getIdRota(),
                         rc.getRota().getNome(),
@@ -150,8 +160,14 @@ public class RotaColaboradorService {
 
     @Transactional
     public void remover(Integer idRota, UUID idColaborador) {
-        if (rotaColabRepo.existsByColaborador_IdColaboradorAndRota_IdRota(idColaborador, idRota)) {
-            rotaColabRepo.deleteById_IdRotaAndId_IdColaborador(idRota, idColaborador);
-        }
+        var id = new RotaColaboradorId(idColaborador, idRota);
+
+        var rotaColab = rotaColabRepo.findById(id)
+                .orElseThrow(() -> new RegraNegocioException(
+                        "VINCULO_INEXISTENTE",
+                        "Esse colaborador não está atribuído a essa rota."
+                ));
+
+        rotaColab.setAtivo(false); // soft delete
     }
 }

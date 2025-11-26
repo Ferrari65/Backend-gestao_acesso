@@ -3,10 +3,14 @@ package com.domain.user.Rotas;
 import com.domain.user.colaborador.User;
 import com.domain.user.endereco.Pontos;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 
+@Getter
+@Setter
 @Entity
 @Table(name= "rota_colaborador")
 public class RotaColaborador {
@@ -27,6 +31,8 @@ public class RotaColaborador {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ponto")
     private Pontos pontos;
+
+    private Boolean ativo = true;
 
     @Column(name = "data_uso", nullable = false, columnDefinition = "timestamp")
     private LocalDateTime dataUso;

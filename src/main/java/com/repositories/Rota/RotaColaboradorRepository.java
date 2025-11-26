@@ -51,4 +51,13 @@ public interface RotaColaboradorRepository extends JpaRepository<RotaColaborador
         """, nativeQuery = true)
     long contarColaboradoresPorNomeRotaEPeriodo(@Param("nomeRota") String nomeRota,
                                                 @Param("periodo") String periodo);
+
+    boolean existsByColaborador_IdColaboradorAndId_IdRotaNotAndAtivoTrue(UUID idColaborador, Integer idRota);
+
+
+
+    List<RotaColaborador> findByRota_IdRotaAndAtivoTrue(Integer idRota);
+    List<RotaColaborador> findByColaborador_IdColaboradorAndAtivoTrue(UUID idColaborador);
+    Optional<RotaColaborador> findFirstByColaborador_IdColaboradorAndAtivoTrueOrderByDataUsoDesc(UUID idColaborador);
+
 }
