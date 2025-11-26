@@ -3,6 +3,7 @@ package com.services.colaborador;
 import com.dto.colaborador.RotaColaboradorResponse;
 import com.domain.user.Rotas.RotaColaborador;
 import com.domain.user.Rotas.RotaColaboradorId;
+import com.dto.mapa.MapaColabPontoDTO;
 import com.exceptions.RegraNegocioException;
 import com.repositories.Rota.RotaColaboradorRepository;
 import com.repositories.Rota.RotaRepository;
@@ -168,6 +169,10 @@ public class RotaColaboradorService {
                         "Esse colaborador não está atribuído a essa rota."
                 ));
 
-        rotaColab.setAtivo(false); // soft delete
+        rotaColab.setAtivo(false);
+    }
+
+    public List<MapaColabPontoDTO> mapaColaboradores(Integer idRota) {
+        return rotaColabRepo.mapaColaboradoresPorPonto(idRota);
     }
 }

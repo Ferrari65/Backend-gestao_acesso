@@ -2,6 +2,7 @@ package com.repositories.Rota;
 
 import com.domain.user.Rotas.RotaColaborador;
 import com.domain.user.Rotas.RotaColaboradorId;
+import com.dto.mapa.MapaColabPontoDTO;
 import com.projection.RotaComMaisColaboradoresProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -52,10 +53,24 @@ public interface RotaColaboradorRepository extends JpaRepository<RotaColaborador
     long contarColaboradoresPorNomeRotaEPeriodo(@Param("nomeRota") String nomeRota,
                                                 @Param("periodo") String periodo);
 
+    @Query("""
+    SELECT new com.dto.mapa.MapaColabPontoDTO(
+        p.idPonto,
+        p.nome,
+        p.latitude,
+        p.longitude,
+        COUNT(rc)
+    )
+    FROM RotaColaborador rc
+    JOIN rc.pontos p
+    WHERE (:idRota IS NULL OR rc.rota.idRota = :idRota)
+    GROUP BY p.idPonto, p.nome, p.latitude, p.longitude
+""")
+    List<MapaColabPontoDTO> mapaColaboradoresPorPonto(@Param("idRota") Integer idRota);
+
+
+
     boolean existsByColaborador_IdColaboradorAndId_IdRotaNotAndAtivoTrue(UUID idColaborador, Integer idRota);
-
-
-
     List<RotaColaborador> findByRota_IdRotaAndAtivoTrue(Integer idRota);
     List<RotaColaborador> findByColaborador_IdColaboradorAndAtivoTrue(UUID idColaborador);
     Optional<RotaColaborador> findFirstByColaborador_IdColaboradorAndAtivoTrueOrderByDataUsoDesc(UUID idColaborador);
