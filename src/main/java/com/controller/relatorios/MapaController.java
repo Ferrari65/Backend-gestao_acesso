@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,7 +22,9 @@ public class MapaController {
 
     private final RotaColaboradorService service;
 
+
     @GetMapping("/mapaRotaColaborador")
+    @PreAuthorize("hasRole('GESTOR')")
     @Operation(summary = "Mapa de colaboradores por ponto")
     public ResponseEntity<List<MapaColabPontoDTO>> mapa(
             @RequestParam(required = false) Integer idRota
