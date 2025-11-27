@@ -5,10 +5,10 @@ import com.domain.user.Impedimento.Impedimento;
 import com.dto.impedimentos.ImpedimentoCreateRequest;
 import com.dto.impedimentos.ImpedimentoResponse;
 import com.repositories.impedimento.ImpedimentoRepository;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
@@ -30,17 +30,19 @@ public class ImpedimentoService {
         }
 
         if (req.motivo() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Informe o motivo do impedimento");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe o motivo do impedimento.");
         }
 
-        if (req.motivo() == null){
-            throw  new ResponseStatusException(HttpStatus.BAD_REQUEST,"Informe o lider que registrou o impedimento");
+        if (req.registradoPor() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe o líder que registrou o impedimento.");
         }
 
         var entity = Impedimento.builder()
                 .motivo(req.motivo())
                 .severidade(req.severidade() != null ? req.severidade() : SeveridadeImpedimento.MEDIA)
                 .descricao(req.descricao())
+                .latitude(req.latitude())
+                .longitude(req.longitude())
                 .idViagem(req.idViagem())
                 .ocorridoEm(OffsetDateTime.now())
                 .registradoPor(req.registradoPor())
@@ -53,7 +55,7 @@ public class ImpedimentoService {
 
     @Transactional(readOnly = true)
     public List<ImpedimentoResponse> listar(Boolean apenasAtivos) {
-        var list = (apenasAtivos != null && apenasAtivos)
+        var list = (apenasAtivos != null && Boolean.TRUE.equals(apenasAtivos))
                 ? repo.findByAtivoTrue()
                 : repo.findAll();
 
@@ -65,7 +67,7 @@ public class ImpedimentoService {
     @Transactional
     public ImpedimentoResponse inativar(UUID id) {
         var entity = repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Impedimento não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Impedimento não encontrado."));
 
         if (!entity.isAtivo()) {
             return toResponse(entity);
@@ -74,6 +76,7 @@ public class ImpedimentoService {
         entity.setAtivo(false);
         entity.setTempoFinalizacao(OffsetDateTime.now());
 
+        entity = repo.save(entity);
         return toResponse(entity);
     }
 
