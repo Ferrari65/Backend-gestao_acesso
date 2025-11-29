@@ -3,7 +3,11 @@ package com.services.registroAcesso;
 import com.domain.user.Enum.TipoPessoa;
 import com.domain.user.registroAcesso.RegistroAcesso;
 import com.domain.user.registroAcesso.RegistroAcessoOcupante;
-import com.dto.registroAcesso.*;
+import com.dto.registroAcesso.AcessoCreatePorMatriculaRequest;
+import com.dto.registroAcesso.AcessoCreateRequest;
+import com.dto.registroAcesso.AcessoResponse;
+import com.dto.registroAcesso.AcessoSaidaRequest;
+import com.dto.registroAcesso.PessoaMinDTO;
 import com.repositories.UserRepository;
 import com.repositories.registroAcesso.RegistroAcessoOcupanteRepository;
 import com.repositories.registroAcesso.RegistroAcessoRepository;
@@ -17,7 +21,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.UUID;
 
 @Service
@@ -25,7 +28,7 @@ import java.util.UUID;
 public class AcessoService {
 
     private static final Set<Short> PORTARIAS_VALIDAS =
-            Set.of((short)1, (short)2, (short)3, (short)4, (short)5);
+            Set.of((short) 1, (short) 2, (short) 3, (short) 4, (short) 5);
 
     private static final ZoneId ZONE_ID = ZoneId.of("America/Sao_Paulo");
 
@@ -39,6 +42,7 @@ public class AcessoService {
         Objects.requireNonNull(req.tipoPessoa(), "tipoPessoa é obrigatório");
         Objects.requireNonNull(req.idPessoa(), "idPessoa é obrigatório");
         Objects.requireNonNull(req.codPortaria(), "codPortaria é obrigatório");
+
         if (!PORTARIAS_VALIDAS.contains(req.codPortaria())) {
             throw new IllegalArgumentException("Portaria inválida");
         }
@@ -46,7 +50,9 @@ public class AcessoService {
         validarPessoaExiste(req.tipoPessoa(), req.idPessoa());
 
         registroRepo.findAbertoDoCondutor(req.idPessoa(), req.tipoPessoa())
-                .ifPresent(r -> { throw new IllegalStateException("Já existe um acesso aberto para este condutor."); });
+                .ifPresent(r -> {
+                    throw new IllegalStateException("Já existe um acesso aberto para este condutor.");
+                });
 
         List<UUID> ocupantesIds = Optional.ofNullable(req.ocupantes()).orElseGet(List::of);
 
@@ -69,12 +75,11 @@ public class AcessoService {
         reg = registroRepo.save(reg);
 
         for (UUID idOcupante : ocupantesIds) {
-            ocupanteRepo.save(
-                    RegistroAcessoOcupante.builder()
-                            .registro(reg)
-                            .idColaborador(idOcupante)
-                            .build()
-            );
+            var ocup = RegistroAcessoOcupante.builder()
+                    .registro(reg)
+                    .idPessoaOcupante(idOcupante)
+                    .build();
+            ocupanteRepo.save(ocup);
         }
 
         return montarResponse(reg);
@@ -85,10 +90,12 @@ public class AcessoService {
         Objects.requireNonNull(req.tipoPessoa(), "tipoPessoa é obrigatório");
         Objects.requireNonNull(req.matriculaOuDocumento(), "matriculaOuDocumento é obrigatório");
         Objects.requireNonNull(req.codPortaria(), "codPortaria é obrigatório");
+
         if (!PORTARIAS_VALIDAS.contains(req.codPortaria())) {
             throw new IllegalArgumentException("Portaria inválida");
         }
 
+        // Condutor continua respeitando o tipoPessoa
         UUID idCondutor = switch (req.tipoPessoa()) {
             case COLABORADOR -> userRepo.findByMatricula(req.matriculaOuDocumento())
                     .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado pela matrícula"))
@@ -98,49 +105,70 @@ public class AcessoService {
                     .getId();
         };
 
-        List<UUID> ocupantesIds = List.of();
+        // ===== NOVA REGRA DE OCUPANTES =====
+        // Junta tudo o que vier (matriculas + documentos) e tenta achar como colaborador OU visitante
+        List<String> codigosOcupantes = new ArrayList<>();
 
-        if (req.tipoPessoa() == TipoPessoa.COLABORADOR) {
-            if (req.ocupantesMatriculas() != null && !req.ocupantesMatriculas().isEmpty()) {
-                var encontrados = userRepo.findByMatriculaIn(req.ocupantesMatriculas());
-                Map<String, UUID> mapa = encontrados.stream()
-                        .collect(Collectors.toMap(u -> u.getMatricula(), u -> u.getId()));
+        if (req.ocupantesMatriculas() != null) {
+            req.ocupantesMatriculas().stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .forEach(codigosOcupantes::add);
+        }
 
-                ocupantesIds = req.ocupantesMatriculas().stream().map(m -> {
-                    UUID id = mapa.get(m);
-                    if (id == null) throw new NoSuchElementException("Matrícula não encontrada: " + m);
-                    return id;
-                }).toList();
+        if (req.ocupantesDocumentos() != null) {
+            req.ocupantesDocumentos().stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .forEach(codigosOcupantes::add);
+        }
+
+        // Remove duplicados de código
+        codigosOcupantes = codigosOcupantes.stream().distinct().toList();
+
+        List<UUID> ocupantesIds = new ArrayList<>();
+
+        for (String codigo : codigosOcupantes) {
+            boolean encontrado = false;
+
+            // 1) tenta como colaborador (matrícula)
+            var optUser = userRepo.findByMatricula(codigo);
+            if (optUser.isPresent()) {
+                ocupantesIds.add(optUser.get().getId());
+                encontrado = true;
             }
 
-        } else {
-            if (req.ocupantesDocumentos() != null && !req.ocupantesDocumentos().isEmpty()) {
-                List<String> documentos = req.ocupantesDocumentos().stream()
-                        .filter(Objects::nonNull)
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .distinct()
-                        .toList();
-
-                List<UUID> coletados = new ArrayList<>(documentos.size());
-                for (String doc : documentos) {
-                    var v = visitanteRepo.findByNumeroDocumento(doc)
-                            .orElseThrow(() -> new NoSuchElementException("Documento de visitante não encontrado: " + doc));
-                    coletados.add(v.getId());
+            // 2) se não achou, tenta como visitante (documento)
+            if (!encontrado) {
+                var optVisitante = visitanteRepo.findByNumeroDocumento(codigo);
+                if (optVisitante.isPresent()) {
+                    ocupantesIds.add(optVisitante.get().getId());
+                    encontrado = true;
                 }
-                ocupantesIds = List.copyOf(coletados);
+            }
+
+            if (!encontrado) {
+                throw new NoSuchElementException("Ocupante não encontrado: " + codigo);
             }
         }
 
+        // Validações finais
         if (ocupantesIds.contains(idCondutor)) {
             throw new IllegalArgumentException("O condutor não pode ser ocupante.");
         }
+
         if (new HashSet<>(ocupantesIds).size() != ocupantesIds.size()) {
             throw new IllegalArgumentException("Ocupantes duplicados.");
         }
 
         return criar(new AcessoCreateRequest(
-                req.tipoPessoa(), idCondutor, req.codPortaria(), req.observacao(), ocupantesIds
+                req.tipoPessoa(),
+                idCondutor,
+                req.codPortaria(),
+                req.observacao(),
+                ocupantesIds
         ));
     }
 
@@ -148,7 +176,10 @@ public class AcessoService {
     public AcessoResponse registrarSaida(UUID idRegistro, AcessoSaidaRequest req) {
         var reg = registroRepo.findById(idRegistro)
                 .orElseThrow(() -> new NoSuchElementException("Registro não encontrado"));
-        if (reg.getSaida() != null) throw new IllegalStateException("Registro já está fechado.");
+
+        if (reg.getSaida() != null) {
+            throw new IllegalStateException("Registro já está fechado.");
+        }
 
         reg.setSaida(OffsetDateTime.now(ZONE_ID));
 
@@ -157,6 +188,7 @@ public class AcessoService {
                     ? req.observacao()
                     : (reg.getObservacao() + " | " + req.observacao()));
         }
+
         reg = registroRepo.save(reg);
         return montarResponse(reg);
     }
@@ -169,8 +201,9 @@ public class AcessoService {
 
     public List<AcessoResponse> listarHistoricoPorData(LocalDate de, LocalDate ate) {
         LocalDate hoje = LocalDate.now();
-        LocalDate ini = (de  != null) ? de  : hoje.minusDays(7);
+        LocalDate ini = (de != null) ? de : hoje.minusDays(7);
         LocalDate fim = (ate != null) ? ate : hoje;
+
         if (fim.isBefore(ini)) {
             throw new IllegalArgumentException("Parâmetro 'ate' não pode ser anterior a 'de'.");
         }
@@ -190,17 +223,22 @@ public class AcessoService {
 
     public List<AcessoResponse> listarHistoricoSomentePortaria(Short codPortaria) {
         return registroRepo.findByCodPortariaOrderByEntradaDesc(codPortaria)
-                .stream().map(this::montarResponse).toList();
+                .stream()
+                .map(this::montarResponse)
+                .toList();
     }
 
     public List<AcessoResponse> listarHistoricoSomenteTipo(TipoPessoa tipoPessoa) {
         return registroRepo.findByTipoPessoaOrderByEntradaDesc(tipoPessoa)
-                .stream().map(this::montarResponse).toList();
+                .stream()
+                .map(this::montarResponse)
+                .toList();
     }
 
     private void validarPessoaExiste(TipoPessoa tipo, UUID id) {
         if (tipo == TipoPessoa.COLABORADOR) {
-            userRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
+            userRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("Colaborador não encontrado"));
         } else {
             visitanteRepo.findByIdAndAtivoTrue(id)
                     .orElseThrow(() -> new NoSuchElementException("Visitante não encontrado/inativo"));
@@ -209,6 +247,7 @@ public class AcessoService {
 
     private AcessoResponse montarResponse(RegistroAcesso r) {
         PessoaMinDTO condutor;
+
         if (r.getTipoPessoa() == TipoPessoa.COLABORADOR) {
             var resumo = userRepo.findResumoByIdColaborador(r.getIdPessoa()).orElse(null);
             condutor = new PessoaMinDTO(r.getIdPessoa(), resumo != null ? resumo.getNome() : null);
@@ -219,12 +258,12 @@ public class AcessoService {
 
         var ocupantes = ocupanteRepo.findByRegistroId(r.getId()).stream()
                 .map(oc -> {
-                    var res = userRepo.findResumoByIdColaborador(oc.getIdColaborador()).orElse(null);
+                    var res = userRepo.findResumoByIdColaborador(oc.getIdPessoaOcupante()).orElse(null);
                     if (res != null) {
-                        return new PessoaMinDTO(oc.getIdColaborador(), res.getNome());
+                        return new PessoaMinDTO(oc.getIdPessoaOcupante(), res.getNome());
                     }
-                    var v = visitanteRepo.findById(oc.getIdColaborador()).orElse(null);
-                    return new PessoaMinDTO(oc.getIdColaborador(), v != null ? v.getNomeCompleto() : null);
+                    var v = visitanteRepo.findById(oc.getIdPessoaOcupante()).orElse(null);
+                    return new PessoaMinDTO(oc.getIdPessoaOcupante(), v != null ? v.getNomeCompleto() : null);
                 })
                 .toList();
 

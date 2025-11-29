@@ -21,12 +21,14 @@ public interface RegistroAcessoRepository extends JpaRepository<RegistroAcesso, 
 
     Optional<RegistroAcesso> findByIdAndSaidaIsNull(UUID id);
 
-    @Query("SELECT r FROM RegistroAcesso r WHERE r.idPessoa = :idPessoa AND r.tipoPessoa = :tipoPessoa AND r.saida IS NULL")
+    @Query("SELECT r FROM RegistroAcesso r " +
+            "WHERE r.idPessoa = :idPessoa AND r.tipoPessoa = :tipoPessoa AND r.saida IS NULL")
     Optional<RegistroAcesso> findAbertoDoCondutor(UUID idPessoa, TipoPessoa tipoPessoa);
 
     @Query("SELECT r FROM RegistroAcesso r WHERE r.saida IS NULL")
     List<RegistroAcesso> findAbertos();
 
     List<RegistroAcesso> findByCodPortariaOrderByEntradaDesc(Short codPortaria);
+
     List<RegistroAcesso> findByTipoPessoaOrderByEntradaDesc(TipoPessoa tipoPessoa);
 }
