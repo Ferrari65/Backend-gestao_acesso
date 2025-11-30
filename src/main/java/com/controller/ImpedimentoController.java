@@ -1,14 +1,16 @@
 package com.controller;
 
+import com.domain.user.Enum.SeveridadeImpedimento;
+import com.dto.impedimentos.ImpedimentoDetalhadoResponse;
 import com.dto.impedimentos.ImpedimentoCreateRequest;
 import com.dto.impedimentos.ImpedimentoResponse;
+import com.dto.mapa.ImpedimentoMapaResponse;
 import com.services.impedimento.ImpedimentoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +47,12 @@ public class ImpedimentoController {
                 .body(resp);
     }
 
+    @GetMapping("/{id}/detalhado")
+    public ImpedimentoDetalhadoResponse detalhado(@PathVariable String id) {
+        UUID uuid = UUID.fromString(id);
+        return service.buscarDetalhado(uuid);
+    }
+
     @GetMapping
     @Operation(
             summary = "Listar impedimentos",
@@ -57,6 +65,14 @@ public class ImpedimentoController {
             @RequestParam(value = "ativos", required = false) Boolean apenasAtivos
     ) {
         return service.listar(apenasAtivos);
+    }
+
+    @GetMapping("/mapa")
+    public List<ImpedimentoMapaResponse> listarParaMapa(
+            @RequestParam(required = false) SeveridadeImpedimento severidade,
+            @RequestParam(required = false, defaultValue = "true") Boolean apenasAtivos
+    ) {
+        return service.listarParaMapa(severidade, apenasAtivos);
     }
 
     @PatchMapping("/{id}/inativar")

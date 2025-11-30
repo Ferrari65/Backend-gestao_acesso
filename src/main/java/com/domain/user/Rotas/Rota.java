@@ -1,6 +1,7 @@
 package com.domain.user.Rotas;
 
 import com.domain.user.Enum.Periodo;
+import com.domain.user.colaborador.User;
 import com.domain.user.endereco.Cidade;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
